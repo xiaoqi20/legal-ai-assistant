@@ -1,0 +1,22 @@
+name: law
+services:
+  postgres:
+    # pgvector pg17 image pinned to the digest validated with this DDL.
+    image: pgvector/pgvector@sha256:7d0a41464797aeb9862dfdc0bbf1526b82cfd324cdd8036df19e3545f4a9ccb8
+    container_name: law-postgres-dev
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${LAW_DB_NAME:?Set LAW_DB_NAME in .env.local}
+      POSTGRES_USER: ${LAW_DB_USER:?Set LAW_DB_USER in .env.local}
+      POSTGRES_PASSWORD: ${LAW_DB_PASSWORD:?Set LAW_DB_PASSWORD in .env.local}
+    ports:
+      - "127.0.0.1:${LAW_DB_PORT:-55432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 5s
+      retries: 15
+volumes:
+  postgres-data:

@@ -1,0 +1,141 @@
+{
+  "pages": [
+    {
+      "path": "pages/splash/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "欢迎来到 AI 英诺律法",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/auth/login",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "登录",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/auth/phone-login",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "手机号登录",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/auth/role",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "选择角色",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "律法AI",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/detail",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "案件详情",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/evidence",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "证据资料清单",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/materials",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "材料证据",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/material-detail",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "材料证据详情",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/analysis",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "案情梳理",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/documents",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "案件文档",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/evidence-sort",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "证据清单梳理",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/chat/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "AI问答",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/history/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "历史对话",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/profile/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "个人中心",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/agreement/index",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "用户服务",
+        "enablePullDownRefresh": false
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "律法AI",
+    "navigationBarBackgroundColor": "#FFFFFF",
+    "backgroundColor": "#F7F7F9",
+    "rpxCalcMaxDeviceWidth": 375,
+    "rpxCalcBaseDeviceWidth": 375,
+    "rpxCalcIncludeWidth": 750
+  }
+}

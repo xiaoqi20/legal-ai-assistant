@@ -1,0 +1,13 @@
+.env.local
+.pgpass.local
+
+.DS_Store
+backend/.env
+backend/.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+backend/.coverage
+backend/.env.test
+.playwright-cli/

@@ -1,0 +1,3972 @@
+{
+  "columns": [
+    [
+      "ai_citations",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "message_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "chunk_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "file_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "document_title",
+      "character varying(255)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "quote",
+      "text",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "page_no",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "rank",
+      "smallint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "relevance",
+      "numeric(5,4)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_citations",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "ai_conversations",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "ai_conversations",
+      "user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_conversations",
+      "case_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_conversations",
+      "mode",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_conversations",
+      "title",
+      "character varying(200)",
+      true,
+      "",
+      "",
+      "'未命名对话'::character varying"
+    ],
+    [
+      "ai_conversations",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'active'::character varying"
+    ],
+    [
+      "ai_conversations",
+      "message_count",
+      "integer",
+      true,
+      "",
+      "",
+      "0"
+    ],
+    [
+      "ai_conversations",
+      "last_message_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_conversations",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "ai_conversations",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "ai_conversations",
+      "deleted_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_feedback",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "ai_feedback",
+      "message_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_feedback",
+      "user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_feedback",
+      "rating",
+      "character varying(8)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_feedback",
+      "reason_code",
+      "character varying(50)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_feedback",
+      "comment",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_feedback",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "ai_feedback",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "ai_message_files",
+      "message_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_message_files",
+      "file_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_message_files",
+      "case_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_message_files",
+      "sort_order",
+      "smallint",
+      true,
+      "",
+      "",
+      "0"
+    ],
+    [
+      "ai_message_files",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "ai_messages",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "conversation_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "case_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "seq",
+      "integer",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "role",
+      "character varying(10)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "content",
+      "text",
+      true,
+      "",
+      "",
+      "''::text"
+    ],
+    [
+      "ai_messages",
+      "content_type",
+      "character varying(12)",
+      true,
+      "",
+      "",
+      "'markdown'::character varying"
+    ],
+    [
+      "ai_messages",
+      "status",
+      "character varying(12)",
+      true,
+      "",
+      "",
+      "'completed'::character varying"
+    ],
+    [
+      "ai_messages",
+      "model",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "prompt_version_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "input_tokens",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "output_tokens",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "cost_usd",
+      "numeric(10,6)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "latency_ms",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "client_message_id",
+      "character varying(64)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "error_code",
+      "character varying(50)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "error_message",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "ai_messages",
+      "metadata",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "ai_messages",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "ai_messages",
+      "completed_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "analysis_sources",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "analysis_sources",
+      "analysis_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "analysis_sources",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "analysis_sources",
+      "chunk_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "analysis_sources",
+      "file_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "analysis_sources",
+      "weight",
+      "numeric(5,4)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "analysis_sources",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "async_jobs",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "job_type",
+      "character varying(30)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "status",
+      "character varying(12)",
+      true,
+      "",
+      "",
+      "'queued'::character varying"
+    ],
+    [
+      "async_jobs",
+      "resource_type",
+      "character varying(30)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "resource_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "payload",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "async_jobs",
+      "attempts",
+      "smallint",
+      true,
+      "",
+      "",
+      "0"
+    ],
+    [
+      "async_jobs",
+      "max_attempts",
+      "smallint",
+      true,
+      "",
+      "",
+      "3"
+    ],
+    [
+      "async_jobs",
+      "last_error",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "idempotency_key",
+      "character varying(128)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "scheduled_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "async_jobs",
+      "started_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "finished_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "async_jobs",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "async_jobs",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "audit_logs",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "audit_logs",
+      "user_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "audit_logs",
+      "action",
+      "character varying(100)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "audit_logs",
+      "resource_type",
+      "character varying(50)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "audit_logs",
+      "resource_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "audit_logs",
+      "ip",
+      "inet",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "audit_logs",
+      "user_agent",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "audit_logs",
+      "metadata",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "audit_logs",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "case_analyses",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "analysis_type",
+      "character varying(30)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'pending'::character varying"
+    ],
+    [
+      "case_analyses",
+      "content",
+      "jsonb",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "schema_version",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      "'1.0'::character varying"
+    ],
+    [
+      "case_analyses",
+      "model",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "prompt_version_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "source_fingerprint",
+      "character(64)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "input_tokens",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "output_tokens",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "cost_usd",
+      "numeric(10,6)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "error_message",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "created_by",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "started_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "completed_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_analyses",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "case_documents",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "case_documents",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_documents",
+      "file_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_documents",
+      "title",
+      "character varying(255)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_documents",
+      "category",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      "'other'::character varying"
+    ],
+    [
+      "case_documents",
+      "ai_classified",
+      "boolean",
+      true,
+      "",
+      "",
+      "false"
+    ],
+    [
+      "case_documents",
+      "classification_confidence",
+      "numeric(4,3)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_documents",
+      "uploaded_by",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_documents",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "case_documents",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "case_parties",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "party_role",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "party_type",
+      "character varying(12)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "name",
+      "character varying(200)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "id_no_masked",
+      "character varying(32)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "phone_masked",
+      "character varying(32)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "address",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "case_parties",
+      "sort_order",
+      "smallint",
+      true,
+      "",
+      "",
+      "0"
+    ],
+    [
+      "case_parties",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "case_parties",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "cases",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "cases",
+      "owner_user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "cases",
+      "org_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "cases",
+      "title",
+      "character varying(200)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "cases",
+      "case_type",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      "'civil'::character varying"
+    ],
+    [
+      "cases",
+      "procedure",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      "'first_instance'::character varying"
+    ],
+    [
+      "cases",
+      "analysis_status",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      "'not_analyzed'::character varying"
+    ],
+    [
+      "cases",
+      "evidence_upload_status",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      "'not_uploaded'::character varying"
+    ],
+    [
+      "cases",
+      "win_rate",
+      "numeric(5,2)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "cases",
+      "win_rate_updated_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "cases",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'active'::character varying"
+    ],
+    [
+      "cases",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "cases",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "cases",
+      "deleted_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "file_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "chunk_index",
+      "integer",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "content",
+      "text",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "page_no",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "char_start",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "char_end",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "token_count",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "embedding",
+      "vector(1536)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "embedding_model",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "doc_chunks",
+      "search_vector",
+      "tsvector",
+      false,
+      "",
+      "s",
+      "to_tsvector('simple'::regconfig, content)"
+    ],
+    [
+      "doc_chunks",
+      "metadata",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "doc_chunks",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_item_files",
+      "file_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_item_files",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_item_files",
+      "sort_order",
+      "smallint",
+      true,
+      "",
+      "",
+      "0"
+    ],
+    [
+      "evidence_item_files",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "evidence_items",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "requirement_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "category",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "title",
+      "character varying(200)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "status",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      "'ai_analyzing'::character varying"
+    ],
+    [
+      "evidence_items",
+      "status_reason",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "description",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "source",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "occurred_on",
+      "date",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "uploader_user_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "contact_name",
+      "character varying(50)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "contact_phone_masked",
+      "character varying(32)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "reviewed_by",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "reviewed_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_items",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "evidence_items",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "evidence_requirements",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "case_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "title",
+      "character varying(200)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "category",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "purpose",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "collection_channel",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "collection_method",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "precautions",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'required'::character varying"
+    ],
+    [
+      "evidence_requirements",
+      "source",
+      "character varying(8)",
+      true,
+      "",
+      "",
+      "'ai'::character varying"
+    ],
+    [
+      "evidence_requirements",
+      "analysis_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "evidence_requirements",
+      "sort_order",
+      "smallint",
+      true,
+      "",
+      "",
+      "0"
+    ],
+    [
+      "evidence_requirements",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "evidence_requirements",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "files",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "files",
+      "case_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "uploaded_by",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "storage_provider",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'s3'::character varying"
+    ],
+    [
+      "files",
+      "bucket",
+      "character varying(100)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "object_key",
+      "text",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "original_name",
+      "character varying(255)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "mime_type",
+      "character varying(100)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "size_bytes",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "sha256",
+      "character(64)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "files",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'uploading'::character varying"
+    ],
+    [
+      "files",
+      "metadata",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "files",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "files",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "legal_documents",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "legal_documents",
+      "doc_type",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "legal_documents",
+      "version",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "legal_documents",
+      "title",
+      "character varying(200)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "legal_documents",
+      "content",
+      "text",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "legal_documents",
+      "effective_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "legal_documents",
+      "published_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "legal_documents",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "organization_members",
+      "org_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "organization_members",
+      "user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "organization_members",
+      "role",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'member'::character varying"
+    ],
+    [
+      "organization_members",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'active'::character varying"
+    ],
+    [
+      "organization_members",
+      "joined_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "organization_members",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "organizations",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "organizations",
+      "name",
+      "character varying(200)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "organizations",
+      "industry",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "organizations",
+      "owner_user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "organizations",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'active'::character varying"
+    ],
+    [
+      "organizations",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "organizations",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "prompt_versions",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "prompt_versions",
+      "prompt_key",
+      "character varying(100)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "prompt_versions",
+      "version",
+      "integer",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "prompt_versions",
+      "content",
+      "text",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "prompt_versions",
+      "model_default",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "prompt_versions",
+      "params",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "prompt_versions",
+      "status",
+      "character varying(10)",
+      true,
+      "",
+      "",
+      "'draft'::character varying"
+    ],
+    [
+      "prompt_versions",
+      "created_by",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "prompt_versions",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "tool_calls",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "conversation_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "message_id",
+      "bigint",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "run_id",
+      "uuid",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "step_no",
+      "smallint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "tool_name",
+      "character varying(100)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "arguments",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "tool_calls",
+      "result",
+      "jsonb",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "status",
+      "character varying(12)",
+      true,
+      "",
+      "",
+      "'pending'::character varying"
+    ],
+    [
+      "tool_calls",
+      "error_message",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "idempotency_key",
+      "character varying(128)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "latency_ms",
+      "integer",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "started_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "finished_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "tool_calls",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "user_consents",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "user_consents",
+      "user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_consents",
+      "document_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_consents",
+      "agreed_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "user_consents",
+      "ip",
+      "inet",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_consents",
+      "user_agent",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "provider",
+      "character varying(20)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "provider_uid",
+      "character varying(128)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "union_id",
+      "character varying(128)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "verified_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "last_used_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_identities",
+      "metadata",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "user_identities",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "user_profiles",
+      "user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "role_type",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "real_name",
+      "character varying(50)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "company_name",
+      "character varying(200)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "position",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "industry",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "organization_name",
+      "character varying(200)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "legal_role",
+      "character varying(50)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_profiles",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "user_profiles",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "user_sessions",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "user_sessions",
+      "user_id",
+      "bigint",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_sessions",
+      "refresh_token_hash",
+      "character(64)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_sessions",
+      "device_label",
+      "character varying(100)",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_sessions",
+      "device_info",
+      "jsonb",
+      true,
+      "",
+      "",
+      "'{}'::jsonb"
+    ],
+    [
+      "user_sessions",
+      "ip",
+      "inet",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_sessions",
+      "expires_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_sessions",
+      "revoked_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "user_sessions",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "user_sessions",
+      "last_seen_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "users",
+      "id",
+      "bigint",
+      true,
+      "d",
+      "",
+      null
+    ],
+    [
+      "users",
+      "display_name",
+      "character varying(50)",
+      true,
+      "",
+      "",
+      null
+    ],
+    [
+      "users",
+      "avatar_url",
+      "text",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "users",
+      "status",
+      "character varying(16)",
+      true,
+      "",
+      "",
+      "'active'::character varying"
+    ],
+    [
+      "users",
+      "last_login_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ],
+    [
+      "users",
+      "created_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "users",
+      "updated_at",
+      "timestamp with time zone",
+      true,
+      "",
+      "",
+      "now()"
+    ],
+    [
+      "users",
+      "deleted_at",
+      "timestamp with time zone",
+      false,
+      "",
+      "",
+      null
+    ]
+  ],
+  "constraints": [
+    [
+      "ai_citations",
+      "ai_citations_check",
+      "CHECK (((chunk_id IS NULL) OR (file_id IS NOT NULL)))"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_chunk_id_case_id_fkey",
+      "FOREIGN KEY (chunk_id, case_id) REFERENCES law.doc_chunks(id, case_id)"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_chunk_id_file_id_case_id_fkey",
+      "FOREIGN KEY (chunk_id, file_id, case_id) REFERENCES law.doc_chunks(id, file_id, case_id)"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_file_id_case_id_fkey",
+      "FOREIGN KEY (file_id, case_id) REFERENCES law.files(id, case_id)"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_message_id_case_id_fkey",
+      "FOREIGN KEY (message_id, case_id) REFERENCES law.ai_messages(id, case_id)"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_message_id_fkey",
+      "FOREIGN KEY (message_id) REFERENCES law.ai_messages(id)"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_check",
+      "CHECK (((((mode)::text = 'assistant'::text) AND (case_id IS NULL)) OR (((mode)::text = 'case_qa'::text) AND (case_id IS NOT NULL))))"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_id_case_id_key",
+      "UNIQUE (id, case_id)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_message_count_check",
+      "CHECK ((message_count >= 0))"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_mode_check",
+      "CHECK (((mode)::text = ANY ((ARRAY['assistant'::character varying, 'case_qa'::character varying])::text[])))"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'archived'::character varying, 'deleted'::character varying])::text[])))"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "ai_feedback",
+      "ai_feedback_message_id_fkey",
+      "FOREIGN KEY (message_id) REFERENCES law.ai_messages(id)"
+    ],
+    [
+      "ai_feedback",
+      "ai_feedback_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "ai_feedback",
+      "ai_feedback_rating_check",
+      "CHECK (((rating)::text = ANY ((ARRAY['like'::character varying, 'dislike'::character varying])::text[])))"
+    ],
+    [
+      "ai_feedback",
+      "ai_feedback_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "ai_message_files",
+      "ai_message_files_file_id_case_id_fkey",
+      "FOREIGN KEY (file_id, case_id) REFERENCES law.files(id, case_id)"
+    ],
+    [
+      "ai_message_files",
+      "ai_message_files_file_id_fkey",
+      "FOREIGN KEY (file_id) REFERENCES law.files(id)"
+    ],
+    [
+      "ai_message_files",
+      "ai_message_files_message_id_case_id_fkey",
+      "FOREIGN KEY (message_id, case_id) REFERENCES law.ai_messages(id, case_id)"
+    ],
+    [
+      "ai_message_files",
+      "ai_message_files_message_id_fkey",
+      "FOREIGN KEY (message_id) REFERENCES law.ai_messages(id)"
+    ],
+    [
+      "ai_message_files",
+      "ai_message_files_pkey",
+      "PRIMARY KEY (message_id, file_id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_content_type_check",
+      "CHECK (((content_type)::text = ANY ((ARRAY['markdown'::character varying, 'text'::character varying, 'json'::character varying])::text[])))"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_conversation_id_case_id_fkey",
+      "FOREIGN KEY (conversation_id, case_id) REFERENCES law.ai_conversations(id, case_id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_conversation_id_fkey",
+      "FOREIGN KEY (conversation_id) REFERENCES law.ai_conversations(id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_id_case_id_key",
+      "UNIQUE (id, case_id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_id_conversation_id_key",
+      "UNIQUE (id, conversation_id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_prompt_version_id_fkey",
+      "FOREIGN KEY (prompt_version_id) REFERENCES law.prompt_versions(id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_role_check",
+      "CHECK (((role)::text = ANY ((ARRAY['user'::character varying, 'assistant'::character varying, 'system'::character varying, 'tool'::character varying])::text[])))"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_seq_check",
+      "CHECK ((seq > 0))"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['streaming'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying])::text[])))"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_analysis_id_case_id_fkey",
+      "FOREIGN KEY (analysis_id, case_id) REFERENCES law.case_analyses(id, case_id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_analysis_id_fkey",
+      "FOREIGN KEY (analysis_id) REFERENCES law.case_analyses(id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_chunk_id_case_id_fkey",
+      "FOREIGN KEY (chunk_id, case_id) REFERENCES law.doc_chunks(id, case_id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_chunk_id_file_id_case_id_fkey",
+      "FOREIGN KEY (chunk_id, file_id, case_id) REFERENCES law.doc_chunks(id, file_id, case_id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_file_id_case_id_fkey",
+      "FOREIGN KEY (file_id, case_id) REFERENCES law.files(id, case_id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_check",
+      "CHECK (((attempts >= 0) AND (max_attempts > 0)))"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_idempotency_key_key",
+      "UNIQUE (idempotency_key)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_job_type_check",
+      "CHECK (((job_type)::text = ANY ((ARRAY['ocr'::character varying, 'document_parse'::character varying, 'embedding'::character varying, 'file_scan'::character varying, 'case_analysis'::character varying, 'evidence_analysis'::character varying])::text[])))"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_resource_type_check",
+      "CHECK (((resource_type)::text = ANY ((ARRAY['file'::character varying, 'case'::character varying, 'analysis'::character varying, 'evidence_item'::character varying])::text[])))"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying, 'succeeded'::character varying, 'failed'::character varying, 'cancelled'::character varying, 'dead'::character varying])::text[])))"
+    ],
+    [
+      "audit_logs",
+      "audit_logs_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "audit_logs",
+      "audit_logs_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_analysis_type_check",
+      "CHECK (((analysis_type)::text = ANY ((ARRAY['win_rate'::character varying, 'case_summary'::character varying, 'timeline'::character varying, 'judicial_reasoning'::character varying, 'dispute_focus'::character varying, 'evidence_chain'::character varying, 'evidence_list'::character varying])::text[])))"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_created_by_fkey",
+      "FOREIGN KEY (created_by) REFERENCES law.users(id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_id_case_id_key",
+      "UNIQUE (id, case_id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_prompt_version_id_fkey",
+      "FOREIGN KEY (prompt_version_id) REFERENCES law.prompt_versions(id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'running'::character varying, 'succeeded'::character varying, 'failed'::character varying, 'cancelled'::character varying])::text[])))"
+    ],
+    [
+      "case_documents",
+      "case_documents_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "case_documents",
+      "case_documents_category_check",
+      "CHECK (((category)::text = ANY ((ARRAY['case_procedure'::character varying, 'court_record'::character varying, 'communication'::character varying, 'other'::character varying])::text[])))"
+    ],
+    [
+      "case_documents",
+      "case_documents_classification_confidence_check",
+      "CHECK (((classification_confidence >= (0)::numeric) AND (classification_confidence <= (1)::numeric)))"
+    ],
+    [
+      "case_documents",
+      "case_documents_file_id_case_id_fkey",
+      "FOREIGN KEY (file_id, case_id) REFERENCES law.files(id, case_id)"
+    ],
+    [
+      "case_documents",
+      "case_documents_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "case_documents",
+      "case_documents_uploaded_by_fkey",
+      "FOREIGN KEY (uploaded_by) REFERENCES law.users(id)"
+    ],
+    [
+      "case_parties",
+      "case_parties_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "case_parties",
+      "case_parties_party_role_check",
+      "CHECK (((party_role)::text = ANY ((ARRAY['plaintiff'::character varying, 'defendant'::character varying, 'third_party'::character varying, 'applicant'::character varying, 'respondent'::character varying, 'other'::character varying])::text[])))"
+    ],
+    [
+      "case_parties",
+      "case_parties_party_type_check",
+      "CHECK (((party_type)::text = ANY ((ARRAY['person'::character varying, 'company'::character varying, 'organization'::character varying])::text[])))"
+    ],
+    [
+      "case_parties",
+      "case_parties_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "cases",
+      "cases_analysis_status_check",
+      "CHECK (((analysis_status)::text = ANY ((ARRAY['not_analyzed'::character varying, 'analyzing'::character varying, 'analyzed'::character varying, 'failed'::character varying])::text[])))"
+    ],
+    [
+      "cases",
+      "cases_case_type_check",
+      "CHECK (((case_type)::text = ANY ((ARRAY['civil'::character varying, 'criminal'::character varying, 'administrative'::character varying, 'other'::character varying])::text[])))"
+    ],
+    [
+      "cases",
+      "cases_evidence_upload_status_check",
+      "CHECK (((evidence_upload_status)::text = ANY ((ARRAY['not_uploaded'::character varying, 'partial'::character varying, 'completed'::character varying])::text[])))"
+    ],
+    [
+      "cases",
+      "cases_id_org_id_key",
+      "UNIQUE (id, org_id)"
+    ],
+    [
+      "cases",
+      "cases_org_id_fkey",
+      "FOREIGN KEY (org_id) REFERENCES law.organizations(id)"
+    ],
+    [
+      "cases",
+      "cases_owner_user_id_fkey",
+      "FOREIGN KEY (owner_user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "cases",
+      "cases_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "cases",
+      "cases_procedure_check",
+      "CHECK (((procedure)::text = ANY ((ARRAY['first_instance'::character varying, 'second_instance'::character varying, 'retrial'::character varying, 'enforcement'::character varying, 'arbitration'::character varying, 'other'::character varying])::text[])))"
+    ],
+    [
+      "cases",
+      "cases_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'archived'::character varying, 'deleted'::character varying])::text[])))"
+    ],
+    [
+      "cases",
+      "cases_win_rate_check",
+      "CHECK (((win_rate >= (0)::numeric) AND (win_rate <= (100)::numeric)))"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_chunk_index_check",
+      "CHECK ((chunk_index >= 0))"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_file_id_case_id_fkey",
+      "FOREIGN KEY (file_id, case_id) REFERENCES law.files(id, case_id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_file_id_fkey",
+      "FOREIGN KEY (file_id) REFERENCES law.files(id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_id_case_id_key",
+      "UNIQUE (id, case_id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_id_file_id_case_id_key",
+      "UNIQUE (id, file_id, case_id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_evidence_item_id_case_id_fkey",
+      "FOREIGN KEY (evidence_item_id, case_id) REFERENCES law.evidence_items(id, case_id)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_evidence_item_id_fkey",
+      "FOREIGN KEY (evidence_item_id) REFERENCES law.evidence_items(id)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_file_id_case_id_fkey",
+      "FOREIGN KEY (file_id, case_id) REFERENCES law.files(id, case_id)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_file_id_fkey",
+      "FOREIGN KEY (file_id) REFERENCES law.files(id)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_pkey",
+      "PRIMARY KEY (evidence_item_id, file_id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_category_check",
+      "CHECK (((category)::text = ANY ((ARRAY['written'::character varying, 'electronic'::character varying, 'photo_video'::character varying, 'audio'::character varying, 'physical'::character varying])::text[])))"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_id_case_id_key",
+      "UNIQUE (id, case_id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_requirement_id_case_id_fkey",
+      "FOREIGN KEY (requirement_id, case_id) REFERENCES law.evidence_requirements(id, case_id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_reviewed_by_fkey",
+      "FOREIGN KEY (reviewed_by) REFERENCES law.users(id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['ai_analyzing'::character varying, 'ai_passed'::character varying, 'ai_failed'::character varying, 'lawyer_pending'::character varying, 'lawyer_rejected'::character varying])::text[])))"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_uploader_user_id_fkey",
+      "FOREIGN KEY (uploader_user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_analysis_id_case_id_fkey",
+      "FOREIGN KEY (analysis_id, case_id) REFERENCES law.case_analyses(id, case_id)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_category_check",
+      "CHECK (((category)::text = ANY ((ARRAY['written'::character varying, 'electronic'::character varying, 'photo_video'::character varying, 'audio'::character varying, 'physical'::character varying])::text[])))"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_check",
+      "CHECK ((((source)::text <> 'ai'::text) OR (analysis_id IS NOT NULL)))"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_id_case_id_key",
+      "UNIQUE (id, case_id)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_source_check",
+      "CHECK (((source)::text = ANY ((ARRAY['ai'::character varying, 'manual'::character varying])::text[])))"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['required'::character varying, 'collecting'::character varying, 'collected'::character varying, 'waived'::character varying])::text[])))"
+    ],
+    [
+      "files",
+      "files_case_id_fkey",
+      "FOREIGN KEY (case_id) REFERENCES law.cases(id)"
+    ],
+    [
+      "files",
+      "files_check",
+      "CHECK (((case_id IS NOT NULL) OR (uploaded_by IS NOT NULL)))"
+    ],
+    [
+      "files",
+      "files_id_case_id_key",
+      "UNIQUE (id, case_id)"
+    ],
+    [
+      "files",
+      "files_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "files",
+      "files_size_bytes_check",
+      "CHECK ((size_bytes > 0))"
+    ],
+    [
+      "files",
+      "files_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['uploading'::character varying, 'available'::character varying, 'quarantined'::character varying, 'failed'::character varying, 'deleted'::character varying])::text[])))"
+    ],
+    [
+      "files",
+      "files_storage_provider_check",
+      "CHECK (((storage_provider)::text = ANY ((ARRAY['s3'::character varying, 'cos'::character varying, 'oss'::character varying])::text[])))"
+    ],
+    [
+      "files",
+      "files_uploaded_by_fkey",
+      "FOREIGN KEY (uploaded_by) REFERENCES law.users(id)"
+    ],
+    [
+      "legal_documents",
+      "legal_documents_doc_type_check",
+      "CHECK (((doc_type)::text = ANY ((ARRAY['user_service'::character varying, 'privacy_policy'::character varying, 'disclaimer'::character varying])::text[])))"
+    ],
+    [
+      "legal_documents",
+      "legal_documents_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "organization_members",
+      "members_validate_owner",
+      "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    ],
+    [
+      "organization_members",
+      "organization_members_org_id_fkey",
+      "FOREIGN KEY (org_id) REFERENCES law.organizations(id)"
+    ],
+    [
+      "organization_members",
+      "organization_members_pkey",
+      "PRIMARY KEY (org_id, user_id)"
+    ],
+    [
+      "organization_members",
+      "organization_members_role_check",
+      "CHECK (((role)::text = ANY ((ARRAY['owner'::character varying, 'admin'::character varying, 'member'::character varying])::text[])))"
+    ],
+    [
+      "organization_members",
+      "organization_members_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['invited'::character varying, 'active'::character varying, 'removed'::character varying])::text[])))"
+    ],
+    [
+      "organization_members",
+      "organization_members_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "organizations",
+      "organizations_id_owner_user_id_fkey",
+      "FOREIGN KEY (id, owner_user_id) REFERENCES law.organization_members(org_id, user_id) DEFERRABLE INITIALLY DEFERRED"
+    ],
+    [
+      "organizations",
+      "organizations_owner_user_id_fkey",
+      "FOREIGN KEY (owner_user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "organizations",
+      "organizations_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "organizations",
+      "organizations_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'disabled'::character varying])::text[])))"
+    ],
+    [
+      "organizations",
+      "organizations_validate_owner",
+      "TRIGGER DEFERRABLE INITIALLY DEFERRED"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_created_by_fkey",
+      "FOREIGN KEY (created_by) REFERENCES law.users(id)"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['draft'::character varying, 'active'::character varying, 'retired'::character varying])::text[])))"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_version_check",
+      "CHECK ((version > 0))"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_conversation_id_fkey",
+      "FOREIGN KEY (conversation_id) REFERENCES law.ai_conversations(id)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_idempotency_key_key",
+      "UNIQUE (idempotency_key)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_message_id_conversation_id_fkey",
+      "FOREIGN KEY (message_id, conversation_id) REFERENCES law.ai_messages(id, conversation_id)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_message_id_fkey",
+      "FOREIGN KEY (message_id) REFERENCES law.ai_messages(id)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['pending'::character varying, 'running'::character varying, 'succeeded'::character varying, 'failed'::character varying, 'cancelled'::character varying])::text[])))"
+    ],
+    [
+      "user_consents",
+      "user_consents_document_id_fkey",
+      "FOREIGN KEY (document_id) REFERENCES law.legal_documents(id)"
+    ],
+    [
+      "user_consents",
+      "user_consents_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "user_consents",
+      "user_consents_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "user_identities",
+      "user_identities_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "user_identities",
+      "user_identities_provider_check",
+      "CHECK (((provider)::text = ANY ((ARRAY['phone'::character varying, 'wechat_mini'::character varying, 'alipay_mini'::character varying, 'apple'::character varying])::text[])))"
+    ],
+    [
+      "user_identities",
+      "user_identities_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "user_profiles",
+      "user_profiles_pkey",
+      "PRIMARY KEY (user_id)"
+    ],
+    [
+      "user_profiles",
+      "user_profiles_role_fields_check",
+      "CHECK (((btrim((real_name)::text) <> ''::text) AND ((((role_type)::text = 'individual'::text) AND (company_name IS NULL) AND (\"position\" IS NULL) AND (industry IS NULL) AND (organization_name IS NULL) AND (legal_role IS NULL)) OR (((role_type)::text = 'enterprise'::text) AND (company_name IS NOT NULL) AND (btrim((company_name)::text) <> ''::text) AND (\"position\" IS NOT NULL) AND (btrim((\"position\")::text) <> ''::text) AND (industry IS NOT NULL) AND (btrim((industry)::text) <> ''::text) AND (organization_name IS NULL) AND (legal_role IS NULL)) OR (((role_type)::text = 'legal'::text) AND (organization_name IS NOT NULL) AND (btrim((organization_name)::text) <> ''::text) AND (legal_role IS NOT NULL) AND (btrim((legal_role)::text) <> ''::text) AND (company_name IS NULL) AND (\"position\" IS NULL) AND (industry IS NULL)))))"
+    ],
+    [
+      "user_profiles",
+      "user_profiles_role_type_check",
+      "CHECK (((role_type)::text = ANY ((ARRAY['individual'::character varying, 'enterprise'::character varying, 'legal'::character varying])::text[])))"
+    ],
+    [
+      "user_profiles",
+      "user_profiles_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "user_sessions",
+      "user_sessions_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "user_sessions",
+      "user_sessions_refresh_token_hash_key",
+      "UNIQUE (refresh_token_hash)"
+    ],
+    [
+      "user_sessions",
+      "user_sessions_user_id_fkey",
+      "FOREIGN KEY (user_id) REFERENCES law.users(id)"
+    ],
+    [
+      "users",
+      "users_pkey",
+      "PRIMARY KEY (id)"
+    ],
+    [
+      "users",
+      "users_status_check",
+      "CHECK (((status)::text = ANY ((ARRAY['active'::character varying, 'disabled'::character varying, 'deleted'::character varying])::text[])))"
+    ]
+  ],
+  "indexes": [
+    [
+      "ai_citations",
+      "ai_citations_case_id_idx",
+      "CREATE INDEX ai_citations_case_id_idx ON law.ai_citations USING btree (case_id) WHERE (case_id IS NOT NULL)"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_message_id_rank_idx",
+      "CREATE INDEX ai_citations_message_id_rank_idx ON law.ai_citations USING btree (message_id, rank)"
+    ],
+    [
+      "ai_citations",
+      "ai_citations_pkey",
+      "CREATE UNIQUE INDEX ai_citations_pkey ON law.ai_citations USING btree (id)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_case_id_idx",
+      "CREATE INDEX ai_conversations_case_id_idx ON law.ai_conversations USING btree (case_id) WHERE (case_id IS NOT NULL)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_id_case_id_key",
+      "CREATE UNIQUE INDEX ai_conversations_id_case_id_key ON law.ai_conversations USING btree (id, case_id)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_pkey",
+      "CREATE UNIQUE INDEX ai_conversations_pkey ON law.ai_conversations USING btree (id)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_title_idx",
+      "CREATE INDEX ai_conversations_title_idx ON law.ai_conversations USING gin (title gin_trgm_ops)"
+    ],
+    [
+      "ai_conversations",
+      "ai_conversations_user_id_last_message_at_idx",
+      "CREATE INDEX ai_conversations_user_id_last_message_at_idx ON law.ai_conversations USING btree (user_id, last_message_at DESC) WHERE ((status)::text = 'active'::text)"
+    ],
+    [
+      "ai_feedback",
+      "ai_feedback_message_id_user_id_idx",
+      "CREATE UNIQUE INDEX ai_feedback_message_id_user_id_idx ON law.ai_feedback USING btree (message_id, user_id)"
+    ],
+    [
+      "ai_feedback",
+      "ai_feedback_pkey",
+      "CREATE UNIQUE INDEX ai_feedback_pkey ON law.ai_feedback USING btree (id)"
+    ],
+    [
+      "ai_feedback",
+      "ai_feedback_rating_created_at_idx",
+      "CREATE INDEX ai_feedback_rating_created_at_idx ON law.ai_feedback USING btree (rating, created_at DESC)"
+    ],
+    [
+      "ai_message_files",
+      "ai_message_files_file_id_idx",
+      "CREATE INDEX ai_message_files_file_id_idx ON law.ai_message_files USING btree (file_id)"
+    ],
+    [
+      "ai_message_files",
+      "ai_message_files_pkey",
+      "CREATE UNIQUE INDEX ai_message_files_pkey ON law.ai_message_files USING btree (message_id, file_id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_client_message_uidx",
+      "CREATE UNIQUE INDEX ai_messages_client_message_uidx ON law.ai_messages USING btree (conversation_id, client_message_id) WHERE (client_message_id IS NOT NULL)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_conversation_id_seq_idx",
+      "CREATE UNIQUE INDEX ai_messages_conversation_id_seq_idx ON law.ai_messages USING btree (conversation_id, seq)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_created_at_idx",
+      "CREATE INDEX ai_messages_created_at_idx ON law.ai_messages USING btree (created_at)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_id_case_id_key",
+      "CREATE UNIQUE INDEX ai_messages_id_case_id_key ON law.ai_messages USING btree (id, case_id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_id_conversation_id_key",
+      "CREATE UNIQUE INDEX ai_messages_id_conversation_id_key ON law.ai_messages USING btree (id, conversation_id)"
+    ],
+    [
+      "ai_messages",
+      "ai_messages_pkey",
+      "CREATE UNIQUE INDEX ai_messages_pkey ON law.ai_messages USING btree (id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_analysis_id_idx",
+      "CREATE INDEX analysis_sources_analysis_id_idx ON law.analysis_sources USING btree (analysis_id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_chunk_uidx",
+      "CREATE UNIQUE INDEX analysis_sources_chunk_uidx ON law.analysis_sources USING btree (analysis_id, chunk_id) WHERE (chunk_id IS NOT NULL)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_file_id_idx",
+      "CREATE INDEX analysis_sources_file_id_idx ON law.analysis_sources USING btree (file_id)"
+    ],
+    [
+      "analysis_sources",
+      "analysis_sources_pkey",
+      "CREATE UNIQUE INDEX analysis_sources_pkey ON law.analysis_sources USING btree (id)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_idempotency_key_key",
+      "CREATE UNIQUE INDEX async_jobs_idempotency_key_key ON law.async_jobs USING btree (idempotency_key)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_job_type_status_idx",
+      "CREATE INDEX async_jobs_job_type_status_idx ON law.async_jobs USING btree (job_type, status)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_pkey",
+      "CREATE UNIQUE INDEX async_jobs_pkey ON law.async_jobs USING btree (id)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_resource_type_resource_id_idx",
+      "CREATE INDEX async_jobs_resource_type_resource_id_idx ON law.async_jobs USING btree (resource_type, resource_id)"
+    ],
+    [
+      "async_jobs",
+      "async_jobs_status_scheduled_at_idx",
+      "CREATE INDEX async_jobs_status_scheduled_at_idx ON law.async_jobs USING btree (status, scheduled_at) WHERE ((status)::text = ANY ((ARRAY['queued'::character varying, 'failed'::character varying])::text[]))"
+    ],
+    [
+      "audit_logs",
+      "audit_logs_created_at_idx",
+      "CREATE INDEX audit_logs_created_at_idx ON law.audit_logs USING brin (created_at)"
+    ],
+    [
+      "audit_logs",
+      "audit_logs_pkey",
+      "CREATE UNIQUE INDEX audit_logs_pkey ON law.audit_logs USING btree (id)"
+    ],
+    [
+      "audit_logs",
+      "audit_logs_resource_type_resource_id_created_at_idx",
+      "CREATE INDEX audit_logs_resource_type_resource_id_created_at_idx ON law.audit_logs USING btree (resource_type, resource_id, created_at DESC)"
+    ],
+    [
+      "audit_logs",
+      "audit_logs_user_id_created_at_idx",
+      "CREATE INDEX audit_logs_user_id_created_at_idx ON law.audit_logs USING btree (user_id, created_at DESC)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_case_id_analysis_type_created_at_idx",
+      "CREATE INDEX case_analyses_case_id_analysis_type_created_at_idx ON law.case_analyses USING btree (case_id, analysis_type, created_at DESC)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_id_case_id_key",
+      "CREATE UNIQUE INDEX case_analyses_id_case_id_key ON law.case_analyses USING btree (id, case_id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_pkey",
+      "CREATE UNIQUE INDEX case_analyses_pkey ON law.case_analyses USING btree (id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_prompt_version_id_idx",
+      "CREATE INDEX case_analyses_prompt_version_id_idx ON law.case_analyses USING btree (prompt_version_id)"
+    ],
+    [
+      "case_analyses",
+      "case_analyses_status_idx",
+      "CREATE INDEX case_analyses_status_idx ON law.case_analyses USING btree (status) WHERE ((status)::text = ANY ((ARRAY['pending'::character varying, 'running'::character varying])::text[]))"
+    ],
+    [
+      "case_documents",
+      "case_documents_case_id_category_created_at_idx",
+      "CREATE INDEX case_documents_case_id_category_created_at_idx ON law.case_documents USING btree (case_id, category, created_at DESC)"
+    ],
+    [
+      "case_documents",
+      "case_documents_case_id_file_id_idx",
+      "CREATE UNIQUE INDEX case_documents_case_id_file_id_idx ON law.case_documents USING btree (case_id, file_id)"
+    ],
+    [
+      "case_documents",
+      "case_documents_file_id_idx",
+      "CREATE INDEX case_documents_file_id_idx ON law.case_documents USING btree (file_id)"
+    ],
+    [
+      "case_documents",
+      "case_documents_pkey",
+      "CREATE UNIQUE INDEX case_documents_pkey ON law.case_documents USING btree (id)"
+    ],
+    [
+      "case_parties",
+      "case_parties_case_id_party_role_sort_order_idx",
+      "CREATE INDEX case_parties_case_id_party_role_sort_order_idx ON law.case_parties USING btree (case_id, party_role, sort_order)"
+    ],
+    [
+      "case_parties",
+      "case_parties_pkey",
+      "CREATE UNIQUE INDEX case_parties_pkey ON law.case_parties USING btree (id)"
+    ],
+    [
+      "cases",
+      "cases_analysis_status_idx",
+      "CREATE INDEX cases_analysis_status_idx ON law.cases USING btree (analysis_status) WHERE ((status)::text = 'active'::text)"
+    ],
+    [
+      "cases",
+      "cases_id_org_id_key",
+      "CREATE UNIQUE INDEX cases_id_org_id_key ON law.cases USING btree (id, org_id)"
+    ],
+    [
+      "cases",
+      "cases_org_id_updated_at_idx",
+      "CREATE INDEX cases_org_id_updated_at_idx ON law.cases USING btree (org_id, updated_at DESC) WHERE ((org_id IS NOT NULL) AND (deleted_at IS NULL))"
+    ],
+    [
+      "cases",
+      "cases_owner_user_id_updated_at_idx",
+      "CREATE INDEX cases_owner_user_id_updated_at_idx ON law.cases USING btree (owner_user_id, updated_at DESC) WHERE (deleted_at IS NULL)"
+    ],
+    [
+      "cases",
+      "cases_pkey",
+      "CREATE UNIQUE INDEX cases_pkey ON law.cases USING btree (id)"
+    ],
+    [
+      "cases",
+      "cases_title_idx",
+      "CREATE INDEX cases_title_idx ON law.cases USING gin (title gin_trgm_ops)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_case_id_file_id_idx",
+      "CREATE INDEX doc_chunks_case_id_file_id_idx ON law.doc_chunks USING btree (case_id, file_id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_embedding_idx",
+      "CREATE INDEX doc_chunks_embedding_idx ON law.doc_chunks USING hnsw (embedding vector_cosine_ops) WHERE (embedding IS NOT NULL)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_file_id_chunk_index_idx",
+      "CREATE UNIQUE INDEX doc_chunks_file_id_chunk_index_idx ON law.doc_chunks USING btree (file_id, chunk_index)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_id_case_id_key",
+      "CREATE UNIQUE INDEX doc_chunks_id_case_id_key ON law.doc_chunks USING btree (id, case_id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_id_file_id_case_id_key",
+      "CREATE UNIQUE INDEX doc_chunks_id_file_id_case_id_key ON law.doc_chunks USING btree (id, file_id, case_id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_pkey",
+      "CREATE UNIQUE INDEX doc_chunks_pkey ON law.doc_chunks USING btree (id)"
+    ],
+    [
+      "doc_chunks",
+      "doc_chunks_search_vector_idx",
+      "CREATE INDEX doc_chunks_search_vector_idx ON law.doc_chunks USING gin (search_vector)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_file_id_idx",
+      "CREATE INDEX evidence_item_files_file_id_idx ON law.evidence_item_files USING btree (file_id)"
+    ],
+    [
+      "evidence_item_files",
+      "evidence_item_files_pkey",
+      "CREATE UNIQUE INDEX evidence_item_files_pkey ON law.evidence_item_files USING btree (evidence_item_id, file_id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_case_id_status_created_at_idx",
+      "CREATE INDEX evidence_items_case_id_status_created_at_idx ON law.evidence_items USING btree (case_id, status, created_at DESC)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_id_case_id_key",
+      "CREATE UNIQUE INDEX evidence_items_id_case_id_key ON law.evidence_items USING btree (id, case_id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_pkey",
+      "CREATE UNIQUE INDEX evidence_items_pkey ON law.evidence_items USING btree (id)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_requirement_id_idx",
+      "CREATE INDEX evidence_items_requirement_id_idx ON law.evidence_items USING btree (requirement_id) WHERE (requirement_id IS NOT NULL)"
+    ],
+    [
+      "evidence_items",
+      "evidence_items_uploader_user_id_idx",
+      "CREATE INDEX evidence_items_uploader_user_id_idx ON law.evidence_items USING btree (uploader_user_id)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_analysis_id_idx",
+      "CREATE INDEX evidence_requirements_analysis_id_idx ON law.evidence_requirements USING btree (analysis_id) WHERE (analysis_id IS NOT NULL)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_case_id_sort_order_idx",
+      "CREATE INDEX evidence_requirements_case_id_sort_order_idx ON law.evidence_requirements USING btree (case_id, sort_order)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_id_case_id_key",
+      "CREATE UNIQUE INDEX evidence_requirements_id_case_id_key ON law.evidence_requirements USING btree (id, case_id)"
+    ],
+    [
+      "evidence_requirements",
+      "evidence_requirements_pkey",
+      "CREATE UNIQUE INDEX evidence_requirements_pkey ON law.evidence_requirements USING btree (id)"
+    ],
+    [
+      "files",
+      "files_bucket_object_key_idx",
+      "CREATE UNIQUE INDEX files_bucket_object_key_idx ON law.files USING btree (bucket, object_key)"
+    ],
+    [
+      "files",
+      "files_case_id_created_at_idx",
+      "CREATE INDEX files_case_id_created_at_idx ON law.files USING btree (case_id, created_at DESC)"
+    ],
+    [
+      "files",
+      "files_id_case_id_key",
+      "CREATE UNIQUE INDEX files_id_case_id_key ON law.files USING btree (id, case_id)"
+    ],
+    [
+      "files",
+      "files_pkey",
+      "CREATE UNIQUE INDEX files_pkey ON law.files USING btree (id)"
+    ],
+    [
+      "files",
+      "files_sha256_idx",
+      "CREATE INDEX files_sha256_idx ON law.files USING btree (sha256) WHERE (sha256 IS NOT NULL)"
+    ],
+    [
+      "files",
+      "files_status_idx",
+      "CREATE INDEX files_status_idx ON law.files USING btree (status) WHERE ((status)::text = ANY ((ARRAY['uploading'::character varying, 'available'::character varying])::text[]))"
+    ],
+    [
+      "legal_documents",
+      "legal_documents_doc_type_effective_at_idx",
+      "CREATE INDEX legal_documents_doc_type_effective_at_idx ON law.legal_documents USING btree (doc_type, effective_at DESC)"
+    ],
+    [
+      "legal_documents",
+      "legal_documents_doc_type_version_idx",
+      "CREATE UNIQUE INDEX legal_documents_doc_type_version_idx ON law.legal_documents USING btree (doc_type, version)"
+    ],
+    [
+      "legal_documents",
+      "legal_documents_pkey",
+      "CREATE UNIQUE INDEX legal_documents_pkey ON law.legal_documents USING btree (id)"
+    ],
+    [
+      "organization_members",
+      "organization_members_org_id_idx",
+      "CREATE UNIQUE INDEX organization_members_org_id_idx ON law.organization_members USING btree (org_id) WHERE (((role)::text = 'owner'::text) AND ((status)::text = 'active'::text))"
+    ],
+    [
+      "organization_members",
+      "organization_members_org_id_role_idx",
+      "CREATE INDEX organization_members_org_id_role_idx ON law.organization_members USING btree (org_id, role)"
+    ],
+    [
+      "organization_members",
+      "organization_members_pkey",
+      "CREATE UNIQUE INDEX organization_members_pkey ON law.organization_members USING btree (org_id, user_id)"
+    ],
+    [
+      "organization_members",
+      "organization_members_user_id_status_idx",
+      "CREATE INDEX organization_members_user_id_status_idx ON law.organization_members USING btree (user_id, status)"
+    ],
+    [
+      "organizations",
+      "organizations_owner_user_id_idx",
+      "CREATE INDEX organizations_owner_user_id_idx ON law.organizations USING btree (owner_user_id)"
+    ],
+    [
+      "organizations",
+      "organizations_pkey",
+      "CREATE UNIQUE INDEX organizations_pkey ON law.organizations USING btree (id)"
+    ],
+    [
+      "organizations",
+      "organizations_status_idx",
+      "CREATE INDEX organizations_status_idx ON law.organizations USING btree (status)"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_active_uidx",
+      "CREATE UNIQUE INDEX prompt_versions_active_uidx ON law.prompt_versions USING btree (prompt_key) WHERE ((status)::text = 'active'::text)"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_pkey",
+      "CREATE UNIQUE INDEX prompt_versions_pkey ON law.prompt_versions USING btree (id)"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_prompt_key_status_idx",
+      "CREATE INDEX prompt_versions_prompt_key_status_idx ON law.prompt_versions USING btree (prompt_key, status)"
+    ],
+    [
+      "prompt_versions",
+      "prompt_versions_prompt_key_version_idx",
+      "CREATE UNIQUE INDEX prompt_versions_prompt_key_version_idx ON law.prompt_versions USING btree (prompt_key, version)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_conversation_id_created_at_idx",
+      "CREATE INDEX tool_calls_conversation_id_created_at_idx ON law.tool_calls USING btree (conversation_id, created_at DESC)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_idempotency_key_key",
+      "CREATE UNIQUE INDEX tool_calls_idempotency_key_key ON law.tool_calls USING btree (idempotency_key)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_pkey",
+      "CREATE UNIQUE INDEX tool_calls_pkey ON law.tool_calls USING btree (id)"
+    ],
+    [
+      "tool_calls",
+      "tool_calls_run_id_step_no_idx",
+      "CREATE INDEX tool_calls_run_id_step_no_idx ON law.tool_calls USING btree (run_id, step_no)"
+    ],
+    [
+      "user_consents",
+      "user_consents_document_id_agreed_at_idx",
+      "CREATE INDEX user_consents_document_id_agreed_at_idx ON law.user_consents USING btree (document_id, agreed_at DESC)"
+    ],
+    [
+      "user_consents",
+      "user_consents_pkey",
+      "CREATE UNIQUE INDEX user_consents_pkey ON law.user_consents USING btree (id)"
+    ],
+    [
+      "user_consents",
+      "user_consents_user_id_document_id_idx",
+      "CREATE UNIQUE INDEX user_consents_user_id_document_id_idx ON law.user_consents USING btree (user_id, document_id)"
+    ],
+    [
+      "user_identities",
+      "user_identities_pkey",
+      "CREATE UNIQUE INDEX user_identities_pkey ON law.user_identities USING btree (id)"
+    ],
+    [
+      "user_identities",
+      "user_identities_provider_provider_uid_idx",
+      "CREATE UNIQUE INDEX user_identities_provider_provider_uid_idx ON law.user_identities USING btree (provider, provider_uid)"
+    ],
+    [
+      "user_identities",
+      "user_identities_union_id_uidx",
+      "CREATE UNIQUE INDEX user_identities_union_id_uidx ON law.user_identities USING btree (provider, union_id) WHERE (union_id IS NOT NULL)"
+    ],
+    [
+      "user_identities",
+      "user_identities_user_id_idx",
+      "CREATE INDEX user_identities_user_id_idx ON law.user_identities USING btree (user_id)"
+    ],
+    [
+      "user_profiles",
+      "user_profiles_pkey",
+      "CREATE UNIQUE INDEX user_profiles_pkey ON law.user_profiles USING btree (user_id)"
+    ],
+    [
+      "user_profiles",
+      "user_profiles_role_type_idx",
+      "CREATE INDEX user_profiles_role_type_idx ON law.user_profiles USING btree (role_type)"
+    ],
+    [
+      "user_sessions",
+      "user_sessions_pkey",
+      "CREATE UNIQUE INDEX user_sessions_pkey ON law.user_sessions USING btree (id)"
+    ],
+    [
+      "user_sessions",
+      "user_sessions_refresh_token_hash_key",
+      "CREATE UNIQUE INDEX user_sessions_refresh_token_hash_key ON law.user_sessions USING btree (refresh_token_hash)"
+    ],
+    [
+      "user_sessions",
+      "user_sessions_user_id_expires_at_idx",
+      "CREATE INDEX user_sessions_user_id_expires_at_idx ON law.user_sessions USING btree (user_id, expires_at DESC) WHERE (revoked_at IS NULL)"
+    ],
+    [
+      "users",
+      "users_pkey",
+      "CREATE UNIQUE INDEX users_pkey ON law.users USING btree (id)"
+    ],
+    [
+      "users",
+      "users_status_created_at_idx",
+      "CREATE INDEX users_status_created_at_idx ON law.users USING btree (status, created_at DESC)"
+    ],
+    [
+      "users",
+      "users_status_idx",
+      "CREATE INDEX users_status_idx ON law.users USING btree (status) WHERE (deleted_at IS NULL)"
+    ]
+  ],
+  "triggers": [
+    [
+      "ai_conversations",
+      "conversations_scope_immutable",
+      "CREATE TRIGGER conversations_scope_immutable BEFORE UPDATE ON law.ai_conversations FOR EACH ROW EXECUTE FUNCTION law.reject_scope_change('user_id', 'case_id', 'mode')"
+    ],
+    [
+      "ai_message_files",
+      "message_files_validate_scope",
+      "CREATE TRIGGER message_files_validate_scope BEFORE INSERT OR UPDATE ON law.ai_message_files FOR EACH ROW EXECUTE FUNCTION law.validate_message_attachment()"
+    ],
+    [
+      "ai_messages",
+      "messages_scope_immutable",
+      "CREATE TRIGGER messages_scope_immutable BEFORE UPDATE ON law.ai_messages FOR EACH ROW EXECUTE FUNCTION law.reject_scope_change('conversation_id', 'case_id', 'role')"
+    ],
+    [
+      "ai_messages",
+      "messages_validate_scope",
+      "CREATE TRIGGER messages_validate_scope BEFORE INSERT OR UPDATE ON law.ai_messages FOR EACH ROW EXECUTE FUNCTION law.validate_message_scope()"
+    ],
+    [
+      "audit_logs",
+      "audit_logs_append_only",
+      "CREATE TRIGGER audit_logs_append_only BEFORE DELETE OR UPDATE OR TRUNCATE ON law.audit_logs FOR EACH STATEMENT EXECUTE FUNCTION law.reject_audit_mutation()"
+    ],
+    [
+      "doc_chunks",
+      "chunks_scope_immutable",
+      "CREATE TRIGGER chunks_scope_immutable BEFORE UPDATE ON law.doc_chunks FOR EACH ROW EXECUTE FUNCTION law.reject_scope_change('file_id', 'case_id')"
+    ],
+    [
+      "files",
+      "files_scope_immutable",
+      "CREATE TRIGGER files_scope_immutable BEFORE UPDATE ON law.files FOR EACH ROW EXECUTE FUNCTION law.reject_scope_change('case_id', 'uploaded_by')"
+    ],
+    [
+      "organization_members",
+      "members_validate_owner",
+      "CREATE CONSTRAINT TRIGGER members_validate_owner AFTER INSERT OR DELETE OR UPDATE ON law.organization_members DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION law.validate_organization_owner()"
+    ],
+    [
+      "organizations",
+      "organizations_validate_owner",
+      "CREATE CONSTRAINT TRIGGER organizations_validate_owner AFTER INSERT OR UPDATE ON law.organizations DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION law.validate_organization_owner()"
+    ]
+  ],
+  "functions": [
+    [
+      "reject_audit_mutation",
+      "CREATE OR REPLACE FUNCTION law.reject_audit_mutation()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  RAISE EXCEPTION '审计日志只允许追加' USING ERRCODE = '23514';\nEND;\n$function$\n"
+    ],
+    [
+      "reject_scope_change",
+      "CREATE OR REPLACE FUNCTION law.reject_scope_change()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'law'\nAS $function$\nDECLARE\n  column_name text;\nBEGIN\n  FOREACH column_name IN ARRAY TG_ARGV LOOP\n    IF (to_jsonb(NEW) -> column_name) IS DISTINCT FROM (to_jsonb(OLD) -> column_name) THEN\n      RAISE EXCEPTION '% 的归属字段 % 不允许变更', TG_TABLE_NAME, column_name USING ERRCODE = '23514';\n    END IF;\n  END LOOP;\n  RETURN NEW;\nEND;\n$function$\n"
+    ],
+    [
+      "validate_message_attachment",
+      "CREATE OR REPLACE FUNCTION law.validate_message_attachment()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'law'\nAS $function$\nDECLARE\n  message_case_id bigint;\n  message_role text;\n  conversation_user_id bigint;\n  file_case_id bigint;\n  file_uploader_id bigint;\nBEGIN\n  SELECT m.case_id, m.role, c.user_id INTO message_case_id, message_role, conversation_user_id\n    FROM law.ai_messages m JOIN law.ai_conversations c ON c.id = m.conversation_id\n    WHERE m.id = NEW.message_id FOR KEY SHARE OF m, c;\n  IF NOT FOUND THEN\n    RAISE EXCEPTION '附件所属消息不存在' USING ERRCODE = '23503';\n  END IF;\n  SELECT case_id, uploaded_by INTO file_case_id, file_uploader_id\n    FROM law.files WHERE id = NEW.file_id FOR KEY SHARE;\n  IF NOT FOUND THEN\n    RAISE EXCEPTION '附件文件不存在' USING ERRCODE = '23503';\n  END IF;\n  IF message_role <> 'user' OR NEW.case_id IS DISTINCT FROM message_case_id\n    OR NEW.case_id IS DISTINCT FROM file_case_id THEN\n    RAISE EXCEPTION '附件仅可关联同案件范围的用户消息' USING ERRCODE = '23514';\n  END IF;\n  IF NEW.case_id IS NULL AND file_uploader_id IS DISTINCT FROM conversation_user_id THEN\n    RAISE EXCEPTION '助手附件上传人必须为会话所有者' USING ERRCODE = '23514';\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    ],
+    [
+      "validate_message_scope",
+      "CREATE OR REPLACE FUNCTION law.validate_message_scope()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'law'\nAS $function$\nDECLARE\n  conversation_case_id bigint;\nBEGIN\n  SELECT case_id INTO conversation_case_id FROM law.ai_conversations\n    WHERE id = NEW.conversation_id FOR KEY SHARE;\n  IF NOT FOUND THEN\n    RAISE EXCEPTION '会话不存在' USING ERRCODE = '23503';\n  END IF;\n  IF NEW.case_id IS DISTINCT FROM conversation_case_id THEN\n    RAISE EXCEPTION '消息案件归属必须与会话一致' USING ERRCODE = '23514';\n  END IF;\n  RETURN NEW;\nEND;\n$function$\n"
+    ],
+    [
+      "validate_organization_owner",
+      "CREATE OR REPLACE FUNCTION law.validate_organization_owner()\n RETURNS trigger\n LANGUAGE plpgsql\n SET search_path TO 'pg_catalog', 'law'\nAS $function$\nDECLARE\n  org_ids bigint[];\n  org_to_check bigint;\n  owner_to_check bigint;\nBEGIN\n  IF TG_TABLE_NAME = 'organizations' THEN\n    org_ids := CASE WHEN TG_OP = 'DELETE' THEN ARRAY[OLD.id] ELSE ARRAY[NEW.id] END;\n  ELSIF TG_OP = 'INSERT' THEN\n    org_ids := ARRAY[NEW.org_id];\n  ELSIF TG_OP = 'DELETE' THEN\n    org_ids := ARRAY[OLD.org_id];\n  ELSE\n    org_ids := ARRAY[OLD.org_id, NEW.org_id];\n  END IF;\n  FOREACH org_to_check IN ARRAY org_ids LOOP\n    SELECT owner_user_id INTO owner_to_check FROM law.organizations\n      WHERE id = org_to_check FOR UPDATE;\n    IF FOUND AND NOT EXISTS (\n      SELECT 1 FROM law.organization_members\n      WHERE org_id = org_to_check AND user_id = owner_to_check AND role = 'owner' AND status = 'active'\n    ) THEN\n      RAISE EXCEPTION '组织 % 的所有者必须是有效 owner 成员', org_to_check USING ERRCODE = '23514';\n    END IF;\n  END LOOP;\n  RETURN NULL;\nEND;\n$function$\n"
+    ]
+  ]
+}

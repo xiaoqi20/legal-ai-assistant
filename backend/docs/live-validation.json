@@ -1,0 +1,26 @@
+{
+  "tested_at": "2026-11-13T13:29:53.766047+08:00",
+  "data": "synthetic_only",
+  "embedding_credentials": "pass_1536_dimensions",
+  "wechat_credentials": "pass_access_token_7200_seconds",
+  "case_id": 2,
+  "file_id": 4,
+  "document_parse_and_real_embedding": "pass",
+  "retrieval": "pass",
+  "retrieved_chunks": 1,
+  "conversation_id": 2,
+  "stream_errors": [],
+  "answer": "总价100万元，已付款80万元，尚欠尾款20万元[1]。",
+  "first_delta_seconds": 1.41,
+  "stream_status": "completed",
+  "usage": {
+    "input_tokens": 305,
+    "output_tokens": 38
+  },
+  "persisted_message_id": 11,
+  "persisted_citations": 1,
+  "analysis_id": 1,
+  "analysis_status": "succeeded",
+  "analysis_error": null,
+  "overall": "pass"
+}

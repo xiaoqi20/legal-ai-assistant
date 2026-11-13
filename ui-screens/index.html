@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>律法AI · 页面截图（29 页）</title>
+<style>
+  :root { --bg:#0e1116; --panel:#161b22; --line:#28303a; --text:#e6edf3; --muted:#8b949e; --accent:#6d9bff; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Helvetica Neue",sans-serif; }
+  header { padding:28px 32px 20px; border-bottom:1px solid var(--line); display:flex; gap:24px; align-items:center; flex-wrap:wrap; }
+  header img.cover { width:112px; height:84px; object-fit:cover; border-radius:10px; border:1px solid var(--line); }
+  h1 { margin:0 0 6px; font-size:20px; font-weight:600; }
+  .meta { color:var(--muted); font-size:13px; display:flex; gap:14px; flex-wrap:wrap; }
+  .meta b { color:var(--text); font-weight:500; }
+  a { color:var(--accent); text-decoration:none; }
+  .bar { position:sticky; top:0; z-index:5; background:rgba(14,17,22,.92); backdrop-filter:blur(8px); padding:12px 32px; border-bottom:1px solid var(--line); display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  input { background:var(--panel); border:1px solid var(--line); color:var(--text); border-radius:8px; padding:8px 12px; width:220px; outline:none; }
+  input:focus { border-color:var(--accent); }
+  .chips { display:flex; gap:8px; flex-wrap:wrap; }
+  .chip { border:1px solid var(--line); color:var(--muted); padding:5px 10px; border-radius:999px; cursor:pointer; font-size:12px; user-select:none; }
+  .chip.on { color:#0e1116; background:var(--accent); border-color:var(--accent); }
+  main { padding:24px 32px 64px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:18px; }
+  .card { background:var(--panel); border:1px solid var(--line); border-radius:12px; overflow:hidden; cursor:zoom-in; transition:transform .12s ease,border-color .12s ease; }
+  .card:hover { transform:translateY(-2px); border-color:#3d4a57; }
+  .thumb { aspect-ratio:1128/2436; background:#0b0e12; overflow:hidden; }
+  .thumb img { width:100%; height:100%; object-fit:cover; display:block; }
+  .cap { padding:9px 11px 11px; font-size:12px; color:var(--muted); display:flex; justify-content:space-between; gap:8px; }
+  .cap span:first-child { color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sub { padding:0 11px 10px; font-size:11px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  footer { color:var(--muted); font-size:12px; padding:0 32px 40px; }
+  #lightbox { position:fixed; inset:0; background:rgba(0,0,0,.92); display:none; z-index:20; }
+  #lightbox.show { display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; }
+  #lightbox img { max-width:min(92vw,560px); max-height:82vh; box-shadow:0 20px 60px rgba(0,0,0,.6); }
+  #lightbox .lbcap { color:#c9d1d9; font-size:13px; }
+  #lightbox .close { position:absolute; top:18px; right:24px; font-size:26px; color:#c9d1d9; cursor:pointer; }
+  #lightbox .nav { position:absolute; top:50%; transform:translateY(-50%); font-size:30px; color:#c9d1d9; cursor:pointer; padding:20px; user-select:none; }
+  #lightbox .prev { left:8px; } #lightbox .next { right:8px; }
+</style>
+</head>
+<body>
+<header>
+  <img class="cover" src="cover.png" alt="封面">
+  <div>
+    <h1>律法AI</h1>
+    <div class="meta">
+      <span>作者 <b>charles</b></span>
+      <span><b>29</b> 页（9 个画布）</span>
+      <span>画板 <b>375×812</b>（截图 1128×2436 @3x）</span>
+      <span>价格 <b>¥29.8</b></span>
+    </div>
+  </div>
+</header>
+<div class="bar">
+  <input id="q" placeholder="搜索页面名称 / 序号">
+  <div class="chips" id="chips"></div>
+  <span class="meta" id="count"></span>
+</div>
+<main><div class="grid" id="grid"></div></main>
+<footer>页面截图仅供查看与评审参考。<br>整理日期：2026-11-11</footer>
+<div id="lightbox">
+  <span class="close">×</span>
+  <span class="nav prev">‹</span>
+  <img alt="">
+  <div class="lbcap"></div>
+  <span class="nav next">›</span>
+</div>
+<script>
+const DATA = [{"i":1,"n":"引导页","c":"01引导页","g":"引导页","f":"screens/01-01引导页.png"},{"i":2,"n":"登录8","c":"登录注册-01","g":"注册登录","f":"screens/02-登录注册-01-登录8.png"},{"i":3,"n":"登录-02","c":"登录-02","g":"注册登录","f":"screens/03-登录-02.png"},{"i":4,"n":"登录-勾选协议提示","c":"登录-02","g":"注册登录","f":"screens/04-登录-勾选协议提示.png"},{"i":5,"n":"选择角色-个人","c":"登录-02","g":"注册登录","f":"screens/05-选择角色03-个人.png"},{"i":6,"n":"选择角色-企业用户","c":"登录-02","g":"注册登录","f":"screens/06-选择角色03-企业用户.png"},{"i":7,"n":"选择角色-法律专业用户","c":"登录-02","g":"注册登录","f":"screens/07-选择角色03-法律专业用户.png"},{"i":8,"n":"服务协议","c":"服务协议-03","g":"注册登录","f":"screens/08-服务协议-03.png"},{"i":9,"n":"案件01","c":"03案件","g":"案件","f":"screens/09-案件01.png"},{"i":10,"n":"案件02","c":"03案件","g":"案件","f":"screens/10-案件02.png"},{"i":11,"n":"案件03","c":"03案件","g":"案件","f":"screens/11-案件03.png"},{"i":12,"n":"案件04","c":"03案件","g":"案件","f":"screens/12-案件04.png"},{"i":13,"n":"案件05-查看详情","c":"03案件","g":"案件","f":"screens/13-案件05-查看详情.png"},{"i":14,"n":"案件06-证据清单","c":"03案件","g":"案件","f":"screens/14-案件06-证据清单.png"},{"i":15,"n":"案件07-材料证据","c":"03案件","g":"案件","f":"screens/15-案件07-材料证据.png"},{"i":16,"n":"案件08-材料证据详情","c":"03案件","g":"案件","f":"screens/16-案件08-材料证据详情.png"},{"i":17,"n":"案件09-案情梳理01","c":"03案件","g":"案件","f":"screens/17-案件09-案情梳理01.png"},{"i":18,"n":"案件09-案情梳理(废弃不要）","c":"03案件","g":"案件","f":"screens/18-案件09-案情梳理(废弃不要）.png"},{"i":19,"n":"案件10-证据清单梳理","c":"03案件","g":"案件","f":"screens/19-案件10-证据清单梳理.png"},{"i":20,"n":"案件11-案件文档","c":"03案件","g":"案件","f":"screens/20-案件11-案件文档.png"},{"i":21,"n":"案件09-案情梳理02","c":"03案件","g":"案件","f":"screens/21-案件09-案情梳理02.png"},{"i":22,"n":"案件09-案情梳理03","c":"03案件","g":"案件","f":"screens/22-案件09-案情梳理03.png"},{"i":23,"n":"主页-助手01","c":"04助手","g":"助手","f":"screens/23-主页-助手01.png"},{"i":24,"n":"主页-助手02","c":"04助手","g":"助手","f":"screens/24-主页-助手02.png"},{"i":25,"n":"主页-助手03","c":"04助手","g":"助手","f":"screens/25-主页-助手03.png"},{"i":26,"n":"记录01","c":"05记录","g":"记录","f":"screens/26-记录01.png"},{"i":27,"n":"记录02","c":"05记录","g":"记录","f":"screens/27-记录02.png"},{"i":28,"n":"记录03","c":"05记录","g":"记录","f":"screens/28-记录03.png"},{"i":29,"n":"个人中心","c":"06个人中心","g":"个人中心","f":"screens/29-个人中心.png"}];
+const GROUPS = [...new Set(DATA.map(d => d.g))].filter(Boolean);
+let q = '', g = '';
+const grid = document.getElementById('grid');
+const chips = document.getElementById('chips');
+const countEl = document.getElementById('count');
+const allChip = document.createElement('span');
+allChip.className = 'chip on'; allChip.textContent = '全部'; allChip.dataset.g = '';
+chips.appendChild(allChip);
+for (const name of GROUPS) {
+  const c = document.createElement('span');
+  c.className = 'chip'; c.textContent = name; c.dataset.g = name;
+  chips.appendChild(c);
+}
+chips.addEventListener('click', e => {
+  const c = e.target.closest('.chip'); if (!c) return;
+  chips.querySelectorAll('.chip').forEach(x => x.classList.remove('on'));
+  c.classList.add('on'); g = c.dataset.g; render();
+});
+document.getElementById('q').addEventListener('input', e => { q = e.target.value.trim().toLowerCase(); render(); });
+let shown = [];
+function render() {
+  shown = DATA.filter(d => (!g || d.g === g) && (!q || d.n.toLowerCase().includes(q) || String(d.i) === q));
+  countEl.textContent = shown.length + ' / ' + DATA.length + ' 页';
+  grid.innerHTML = shown.map((d, k) => `<div class="card" data-k="${k}">
+    <div class="thumb"><img loading="lazy" src="${d.f}" alt="${d.n}"></div>
+    <div class="cap"><span>${d.n}</span><span>${String(d.i).padStart(2,'0')}</span></div>
+    <div class="sub">${d.c}</div>
+  </div>`).join('');
+}
+const lb = document.getElementById('lightbox');
+const lbImg = lb.querySelector('img');
+const lbCap = lb.querySelector('.lbcap');
+let cur = 0;
+function openLb(k) {
+  cur = (k + shown.length) % shown.length;
+  const d = shown[cur];
+  lbImg.src = d.f; lbCap.textContent = d.n + '  (' + (cur + 1) + '/' + shown.length + ')';
+  lb.classList.add('show');
+}
+grid.addEventListener('click', e => {
+  const card = e.target.closest('.card'); if (!card) return;
+  openLb(Number(card.dataset.k));
+});
+lb.querySelector('.close').addEventListener('click', () => lb.classList.remove('show'));
+lb.querySelector('.prev').addEventListener('click', e => { e.stopPropagation(); openLb(cur - 1); });
+lb.querySelector('.next').addEventListener('click', e => { e.stopPropagation(); openLb(cur + 1); });
+lb.addEventListener('click', e => { if (e.target === lb) lb.classList.remove('show'); });
+document.addEventListener('keydown', e => {
+  if (!lb.classList.contains('show')) return;
+  if (e.key === 'Escape') lb.classList.remove('show');
+  if (e.key === 'ArrowLeft') openLb(cur - 1);
+  if (e.key === 'ArrowRight') openLb(cur + 1);
+});
+render();
+</script>
+</body>
+</html>
