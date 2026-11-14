@@ -118,6 +118,8 @@ class IncrementalUtf8Decoder {
 class SseFrameParser {
   private buffer = "";
   private handlers: StreamHandlers;
+  private terminal = false;
+  private errorSeen = false;
 
   constructor(handlers: StreamHandlers) {
     this.handlers = handlers;
@@ -125,7 +127,7 @@ class SseFrameParser {
 
   feed(text: string) {
     if (!text) return;
-    this.buffer += text.replace(/\r\n/g, "\n");
+    this.buffer = (this.buffer + text).replace(/\r\n/g, "\n");
     let boundary = this.buffer.indexOf("\n\n");
     while (boundary !== -1) {
       const rawFrame = this.buffer.slice(0, boundary);
@@ -136,9 +138,9 @@ class SseFrameParser {
   }
 
   flush() {
-    if (this.buffer.trim()) {
-      this.dispatchFrame(this.buffer);
-      this.buffer = "";
+    // EOF is not an SSE event boundary. A missing/truncated done event is a failure.
+    if (!this.terminal || this.buffer.trim()) {
+      throw new ApiError(502, "stream_incomplete", "回答连接中断，请查看历史记录后重新提问");
     }
   }
 
@@ -157,12 +159,18 @@ class SseFrameParser {
     }
 
     if (!dataLines.length) return;
+    if (this.terminal) {
+      throw new ApiError(502, "stream_protocol_error", "回答流格式异常");
+    }
     const rawData = dataLines.join("\n");
     let parsed: unknown = rawData;
     try {
       parsed = JSON.parse(rawData);
     } catch {
-      return;
+      throw new ApiError(502, "stream_protocol_error", "回答流格式异常");
+    }
+    if (!parsed || typeof parsed !== "object") {
+      throw new ApiError(502, "stream_protocol_error", "回答流格式异常");
     }
 
     if (eventName === "meta") {
@@ -174,8 +182,15 @@ class SseFrameParser {
       const payload = parsed as { text?: string };
       if (payload.text) this.handlers.onDelta?.(payload.text);
     } else if (eventName === "error") {
+      this.errorSeen = true;
       this.handlers.onError?.(parsed as SseErrorEvent);
     } else if (eventName === "done") {
+      const done = parsed as SseDoneEvent;
+      if (!["completed", "failed", "cancelled"].includes(done.status) ||
+          (this.errorSeen && done.status === "completed")) {
+        throw new ApiError(502, "stream_protocol_error", "回答结束状态异常");
+      }
+      this.terminal = true;
       this.handlers.onDone?.(parsed as SseDoneEvent);
     }
   }
@@ -198,47 +213,67 @@ export function streamSsePost(
 
   // #ifdef H5
   const controller = new AbortController();
+  let h5Aborted = false;
+  const timeout = setTimeout(() => controller.abort(), 130000);
   const done = (async () => {
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-    };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    try {
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        Accept: "text/event-stream",
+      };
+      if (token) headers.Authorization = `Bearer ${token}`;
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-      signal: controller.signal,
-    });
+      const response = await fetch(url, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(body),
+        signal: controller.signal,
+      });
 
-    if (!response.ok) {
-      let data: unknown = null;
-      try {
-        data = await response.json();
-      } catch {
-        data = null;
+      if (!response.ok) {
+        let data: unknown = null;
+        try {
+          data = await response.json();
+        } catch {
+          data = null;
+        }
+        if (response.status === 401) redirectToLogin();
+        throw parseApiError(response.status, data);
       }
-      if (response.status === 401) redirectToLogin();
-      throw parseApiError(response.status, data);
-    }
 
-    if (!response.body) {
-      throw new ApiError(500, "stream_unsupported", "当前环境不支持流式响应");
-    }
+      if (!response.body) {
+        throw new ApiError(500, "stream_unsupported", "当前环境不支持流式响应");
+      }
+      if (!response.headers.get("content-type")?.includes("text/event-stream")) {
+        throw new ApiError(502, "stream_protocol_error", "服务器未返回流式回答");
+      }
 
-    const reader = response.body.getReader();
-    while (true) {
-      const { value, done: streamDone } = await reader.read();
-      if (streamDone) break;
-      if (value) parser.feed(utf8.push(value));
+      const reader = response.body.getReader();
+      try {
+        while (true) {
+          const { value, done: streamDone } = await reader.read();
+          if (streamDone) break;
+          if (value) parser.feed(utf8.push(value));
+        }
+        parser.feed(utf8.flush());
+        parser.flush();
+      } finally {
+        await reader.cancel().catch(() => undefined);
+        reader.releaseLock();
+      }
+    } catch (error) {
+      if (h5Aborted) return;
+      if (controller.signal.aborted) {
+        throw new ApiError(504, "stream_timeout", "回答超时，请查看历史记录后重新提问");
+      }
+      throw error;
+    } finally {
+      clearTimeout(timeout);
     }
-    parser.feed(utf8.flush());
-    parser.flush();
   })();
 
   return {
-    abort: () => controller.abort(),
+    abort: () => { h5Aborted = true; controller.abort(); },
     done,
   };
   // #endif
@@ -249,6 +284,7 @@ export function streamSsePost(
   const mpDone = new Promise<void>((resolve, reject) => {
     const header: Record<string, string> = {
       "Content-Type": "application/json",
+      Accept: "text/event-stream",
     };
     if (token) header.Authorization = `Bearer ${token}`;
 
@@ -266,9 +302,13 @@ export function streamSsePost(
           return;
         }
         if (response.statusCode >= 200 && response.statusCode < 300) {
-          parser.feed(utf8.flush());
-          parser.flush();
-          resolve();
+          try {
+            parser.feed(utf8.flush());
+            parser.flush();
+            resolve();
+          } catch (error) {
+            reject(error);
+          }
           return;
         }
         let parsedError: unknown = null;
@@ -299,9 +339,18 @@ export function streamSsePost(
     const chunkTask = requestTask as unknown as {
       onChunkReceived?: (cb: (res: { data: ArrayBuffer }) => void) => void;
     };
-    chunkTask?.onChunkReceived?.((res) => {
-      if (res?.data) {
-        parser.feed(utf8.push(new Uint8Array(res.data)));
+    if (!chunkTask?.onChunkReceived) {
+      reject(new ApiError(501, "stream_unsupported", "当前微信版本不支持分块回答，请升级微信后重试"));
+      requestTask?.abort();
+      return;
+    }
+    chunkTask.onChunkReceived((res) => {
+      if (aborted) return;
+      try {
+        if (res?.data) parser.feed(utf8.push(new Uint8Array(res.data)));
+      } catch (error) {
+        reject(error);
+        requestTask?.abort();
       }
     });
   });

@@ -76,6 +76,8 @@ class UploadCreate(Input):
   size_bytes: int = Field(gt=0)
   mime_type: Literal[
     "application/pdf",
+    "image/jpeg",
+    "image/png",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     "text/plain",
   ]
@@ -90,8 +92,44 @@ class UploadCreate(Input):
     return value
 
 
+class OcrPageReview(Input):
+  corrected_text: str = Field(min_length=1, max_length=500000)
+
+
 class Retrieval(Input):
   query: str = Field(min_length=1, max_length=4000)
+
+
+class CaseCreate(Input):
+  title: str = Field("未命名案件（待完善）", min_length=1, max_length=200)
+  case_type: Literal["civil", "criminal", "administrative", "other"] = "other"
+  procedure: Literal["first_instance", "second_instance", "retrial", "enforcement", "arbitration", "other"] = "other"
+  summary: str | None = Field(None, max_length=2000)
+  claim: str | None = Field(None, max_length=2000)
+  handling_identity: Literal["self", "agent"] | None = None
+  party_role_label: str | None = Field(None, max_length=80)
+  our_parties: list[str] = Field(default_factory=list, max_length=5)
+  opponent_parties: list[str] = Field(default_factory=list, max_length=5)
+
+  @field_validator("title", mode="before")
+  @classmethod
+  def default_title(cls, value):
+    if isinstance(value, str):
+      return value.strip() or "未命名案件（待完善）"
+    return value
+
+  @field_validator("summary", "claim", "party_role_label")
+  @classmethod
+  def empty_optional_text(cls, value):
+    return value or None
+
+  @field_validator("our_parties", "opponent_parties")
+  @classmethod
+  def valid_party_names(cls, values):
+    names = [name.strip() for name in values]
+    if any(not name or len(name) > 200 for name in names):
+      raise ValueError("当事人名称不能为空且不能超过 200 字")
+    return names
 
 
 class AnalysisCreate(Input):

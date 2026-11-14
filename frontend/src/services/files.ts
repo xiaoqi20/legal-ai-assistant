@@ -3,6 +3,8 @@ import { request } from "./request";
 
 export type SupportedUploadMime =
   | "application/pdf"
+  | "image/jpeg"
+  | "image/png"
   | "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
   | "text/plain";
 
@@ -32,6 +34,19 @@ export interface FileStatusResponse {
     attempts: number;
     last_error: string | null;
   }[];
+}
+
+export interface OcrPage {
+  id: number;
+  page_no: number;
+  provider: string;
+  model: string;
+  raw_text: string;
+  corrected_text: string;
+  blocks: { text: string; polygon: number[] | { x: number; y: number }[]; confidence: number | null }[];
+  average_confidence: number | null;
+  review_status: "pending" | "approved";
+  revision: number;
 }
 
 const SHA256_K = new Uint32Array([
@@ -124,11 +139,13 @@ export async function sha256Hex(buffer: ArrayBuffer): Promise<string> {
 export function resolveUploadMimeType(filename: string): SupportedUploadMime {
   const lower = filename.trim().toLowerCase();
   if (lower.endsWith(".pdf")) return "application/pdf";
+  if (lower.endsWith(".jpg") || lower.endsWith(".jpeg")) return "image/jpeg";
+  if (lower.endsWith(".png")) return "image/png";
   if (lower.endsWith(".docx")) {
     return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
   }
   if (lower.endsWith(".txt")) return "text/plain";
-  throw new Error("目前仅支持上传 .pdf、.docx、.txt 文件");
+  throw new Error("目前仅支持上传 .pdf、.jpg、.png、.docx、.txt 文件");
 }
 
 function sanitizeFilename(name: string): string {
@@ -186,6 +203,17 @@ export function fetchFileStatus(fileId: number): Promise<FileStatusResponse> {
   return request<FileStatusResponse>(`/files/${fileId}`);
 }
 
+export function fetchOcrPages(fileId: number): Promise<OcrPage[]> {
+  return request<OcrPage[]>(`/files/${fileId}/ocr`);
+}
+
+export function reviewOcrPage(fileId: number, pageNo: number, correctedText: string) {
+  return request<{ review_status: string; index_job_id: number | null }>(
+    `/files/${fileId}/ocr/${pageNo}`,
+    { method: "PUT", data: { corrected_text: correctedText } },
+  );
+}
+
 export async function waitForFileReady(
   fileId: number,
   maxAttempts = 20,
@@ -200,7 +228,11 @@ export async function waitForFileReady(
     }
     await new Promise<void>((resolve) => setTimeout(resolve, intervalMs));
   }
-  return fetchFileStatus(fileId);
+  const status = await fetchFileStatus(fileId);
+  if (status.status === "failed" || status.status === "quarantined") {
+    throw new Error(status.jobs?.[0]?.last_error || "文件解析失败");
+  }
+  return status;
 }
 
 export async function uploadCaseDocument(params: {

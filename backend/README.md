@@ -5,16 +5,16 @@ Python **3.12.14** + FastAPI **0.162.5** + Pydantic **2.14.3** + SQLAlchemy **2.
 ## 已实现范围
 
 - 微信小程序 `login_code` + `phone_code` 服务端换取身份/手机号；不可混用两种 code。开发登录和短信 Mock 默认关闭，生产强制禁用。协议版本确认、角色档案、哈希会话令牌与退出撤销。
-- 预置案件列表/搜索/详情、证据目录/材料/附件、案件文档和分析结果查询；个人归属或有效组织成员权限检查。不开放新建/编辑案件。
+- 案件列表/搜索/详情与新建，证据目录/材料/附件、案件文档和分析结果查询；个人归属或有效组织成员权限检查。建案写入案件摘要、诉求及当事人并记录审计日志，编辑案件暂不开放。
 - 私有 S3 兼容上传 POST 策略（5 分钟、服务端生成 key、精确大小/类型），完成确认后创建持久化任务。下载地址有效 2 分钟。必须启用对象版本控制，固定版本读取，Worker 重新校验 SHA-256。
-- PDF、DOCX、UTF-8 TXT 解析，保留页码/字符位置，重叠分块；阿里云 `text-embedding-v4`，显式指定 **1536 维**，每批最多 10 条，拒绝维度、数量、NaN/零向量等异常。扫描 PDF 明确标记需要 OCR；旧版 DOC、OCR、ASR、通话不在本期。
+- PDF、DOCX、UTF-8 TXT 及 JPEG/PNG 图片解析；扫描 PDF 与图片由 PostgreSQL 持久 Worker 异步调用阿里云 OCR，保留页码、文字块坐标、置信度、识别来源及原文。低于阈值（默认 0.85）的页面需人工校对；审核通过后排队进入重叠分块、阿里云 `text-embedding-v4`（显式 1536 维）和现有 RAG。OCR Key 使用独立的 `LAW_OCR_ACCESS_KEY_ID`、`LAW_OCR_ACCESS_KEY_SECRET`，需开通 OCR API 权限；支持 region、阈值和单文档 OCR 页数配置。识别结果会传输至阿里云 OCR 服务，部署前需确认数据处理授权及费用。
 - 显式 SQL 工作流：权限过滤 → pgvector 余弦召回 + pg_trgm 候选 → RRF 排序 → 上下文预算 → 版本化提示词 → DeepSeek。无 LangChain、Agent 或独立向量库。助手模式只使用本人的对话上下文，不擅自检索所有案件。
 - DeepSeek POST SSE：元信息、召回来源、中文增量、错误、结束事件；消息/引用/模型/提示词/耗时/用量落库。成本为配置价格的估算，价格或上游 usage 缺失时保留 `null`。不输出或保存模型 reasoning_content。
 - 同一会话单次生成、幂等键、跨实例数据库并发/速率限制、上下文/输出限制、总超时、显式取消、断连与失效租约恢复。截断/上游不完整流不会标成功。不自动重试已消费的生成请求，避免重复计费。
 - 案情摘要、时间轴、司法推理、争议焦点、证据链/清单异步分析，使用显式 RAG + DeepSeek JSON 输出与 Pydantic 校验，保存来源指纹与分析来源。分析可取消；结果仅覆盖检索片段，不声称遍历了完整卷宗。不生成胜诉率。
 - 对话历史分页、重命名、反馈、批量软删除及追加审计。
 
-外部服务未配置时返回明确错误，应用不会回退 Mock AI。测试中的替身仅存在于 `tests/`。现有前端聊天、历史、登录、文件页面仍主要为本地 Mock；本次没有切换其数据源，需要按下述契约联调。
+外部服务未配置时返回明确错误，应用不会回退 Mock AI。测试中的替身仅存在于 `tests/`。`frontend/` 已有真实 API 适配，可通过 `VITE_USE_MOCK=false` 连接认证、案件、会话/SSE、文件、分析、历史与资料接口；小程序真机授权、SSE 分块、上传/下载和正式网络仍需端到端验收。
 
 ## 本地运行
 
@@ -26,7 +26,7 @@ cd backend
 uv sync --frozen
 ```
 
-首次配置时复制 `.env.example` 为 `.env`；已有配置不要覆盖。设置 URL 编码后的数据库连接串、DeepSeek API Key、阿里云 Embedding Key、模型名、地区对应的 base URL、S3 密钥。`.env` 已忽略，建议权限 `0600`。本仓库当前机器已生成指向既有本地数据库和独立 MinIO 的本地配置，未填入任何 AI/微信凭据。
+首次配置时复制 `.env.example` 为 `.env`；已有配置不要覆盖。设置 URL 编码后的数据库连接串、DeepSeek API Key、阿里云 Embedding Key、模型名、地区对应的 base URL、S3 密钥。`.env` 已忽略，建议权限 `0600`。本机已完成真实 DeepSeek、阿里云 Embedding 和微信 access_token 联调，脱敏记录见 `docs/live-validation.json`；微信完整手机号登录仍待真机验收。
 
 数据库迁移：
 
@@ -39,7 +39,7 @@ uv run python -m scripts.adopt_database
 uv run alembic upgrade head
 ```
 
-已有 Alembic 版本的数据库直接 `upgrade head`。禁止对既有数据重复执行初始 DDL，禁止直接 `stamp head` 绕过实际迁移。迁移不会在 API 启动时自动运行；API 校验数据库当前版本。0001 基线不可自动回滚删除业务库；0002~0004 可逆，提示词回滚采用退役，保留历史引用。基线快照见 `migrations/sql/0001_initial.sql`。
+已有 Alembic 版本的数据库直接 `upgrade head`。禁止对既有数据重复执行初始 DDL，禁止直接 `stamp head` 绕过实际迁移。迁移不会在 API 启动时自动运行；API 校验数据库当前版本。0001 基线不可自动回滚删除业务库；0002~0006 可逆，提示词回滚采用退役，保留历史引用。基线快照见 `migrations/sql/0001_initial.sql`。
 
 启动本地对象存储（`backend/.env` 设置独立随机 S3 密钥）：
 
@@ -48,7 +48,7 @@ docker compose up -d --wait
 uv run python -m scripts.init_storage
 ```
 
-MinIO 使用已验证的 **2025-09-07** 版本镜像 digest，数据位于独立 `law-backend_minio-data` 卷，端口 `59000` / 控制台 `59001` 仅绑定回环地址。若镜像源不可用，通过 `LAW_MINIO_IMAGE` 指定同版本的可信镜像仓库；本机已验证的缓存 digest 可直接启动。初始化创建私有桶并启用版本控制；MinIO 服务级 CORS 默认只允许 `http://localhost:5173`，改预览来源时同步修改 `LAW_S3_CORS_ORIGINS` 与应用 `LAW_CORS_ORIGINS`。
+MinIO 使用已验证的 **2025-09-07** 版本镜像 digest，数据位于独立 `law-backend_minio-data` 卷，端口 `59000` / 控制台 `59001` 仅绑定回环地址。若镜像源不可用，通过 `LAW_MINIO_IMAGE` 指定同版本的可信镜像仓库；本机已验证的缓存 digest 可直接启动。初始化创建私有桶并启用版本控制；本地 MinIO 与 API 默认允许 `http://localhost:5173` 和 `http://127.0.0.1:5173`，改预览来源时同步修改 `LAW_S3_CORS_ORIGINS` 与应用 `LAW_CORS_ORIGINS`。
 
 分别在两个终端运行：
 
@@ -73,18 +73,19 @@ uv run python -m app.worker
 uv run python -m scripts.seed --identity demo
 ```
 
-不会预设分析结果或胜诉率。文档必须自行上传合成资料。默认单文件 20 MiB、500 页、50 万字符；DOCX 解压总量 50 MiB。独立解析进程可在任务超时时终止，Linux 子进程另有内存限制。
+不会预设分析结果或胜诉率。文档必须自行上传合成资料。默认单文件 20 MiB、500 PDF 页、最多 100 张 OCR 页、50 万字符；DOCX 解压总量 50 MiB。PDF 页面在隔离子进程中渲染，文档解析进程可在任务超时时终止，Linux 子进程另有内存限制。
 
 ## 联调顺序
 
-1. 登录取得 Bearer token，填写 `/profile`，查询 `/cases` 取得有权访问的 case_id。
-2. `POST /files/uploads` 申请上传，向返回的 `upload.url` 提交 multipart 表单，原样带上全部 `upload.fields`，文件字段名必须是 `file` 且放最后。随后 `POST /files/{id}/complete`。
-3. 轮询 `GET /files/{id}`，只有 `available` 文件参与召回和下载。任务最多自动执行 3 次，退避 10/20 秒；永久解析错误直接结束。`dead` 任务可由上传人 `POST /files/{id}/retry`，哈希不匹配隔离文件必须重新上传。
-4. `POST /conversations` 传 `{ "case_id": 123 }` 建立案件会话，传 `{}` 建立通用助手会话。
-5. `POST /conversations/{id}/messages/stream`，内容见 [SSE 协议](docs/streaming.md)。网络断开先查消息历史；同一 `client_message_id` 再发返回 409，不重新调用模型。
-6. 用 `POST /cases/{id}/analyses` 创建结构化分析：`{"analysis_type":"case_summary","client_request_id":"a-001"}`，返回 analysis_id/job_id；轮询 `/cases/{id}/analyses/{analysis_id}`。相同请求 ID 幂等，同案件同类型只能有一个在途任务。
+1. 登录取得 Bearer token，填写 `/profile`。创建新案件时 `POST /cases`，字段包括 `title`、`case_type`、`procedure`、`summary`、`claim`、`handling_identity`（`self` / `agent`）、`party_role_label`、`our_parties` 和 `opponent_parties`；案件与当事人同事务保存，并归属当前用户。暂不传文件名或本地文件路径，文件需在案件创建成功后走上传接口。无参数也可创建空白案件，分析状态保持 `not_analyzed`。
+2. 查询 `/cases` 取得有权访问的 case_id。`GET /cases/{id}` 返回案件详情及当事人数组/我方与对方名称列表。
+3. `POST /files/uploads` 申请上传，向返回的 `upload.url` 提交 multipart 表单，原样带上全部 `upload.fields`，文件字段名必须是 `file` 且放最后。随后 `POST /files/{id}/complete`。
+4. 轮询 `GET /files/{id}`，只有 `available` 文件参与召回和下载。任务最多自动执行 3 次，退避 10/20 秒；永久解析错误直接结束。`dead` 任务可由上传人 `POST /files/{id}/retry`，哈希不匹配隔离文件必须重新上传。
+5. `POST /conversations` 传 `{ "case_id": 123 }` 建立案件会话，传 `{}` 建立通用助手会话。
+6. `POST /conversations/{id}/messages/stream`，内容见 [SSE 协议](docs/streaming.md)。网络断开先查消息历史；同一 `client_message_id` 再发返回 409，不重新调用模型。
+7. 用 `POST /cases/{id}/analyses` 创建结构化分析：`{"analysis_type":"case_summary","client_request_id":"a-001"}`，返回 analysis_id/job_id；轮询 `/cases/{id}/analyses/{analysis_id}`。相同请求 ID 幂等，同案件同类型只能有一个在途任务。
 
-完整路由和请求校验以 `/docs` 为准。案件列表保持现有前端 `CaseSummary[]` 形状；材料、分析等采用数据库字段，前端须做页面模型映射。`VITE_API_BASE_URL` 应包含 `/api/v1`，当前 `request.ts` 还需接入 Authorization；不要仅关闭 Mock 开关就声称整个前端已联通。
+完整路由和请求校验以 `/docs` 为准。案件列表保持前端 `CaseSummary[]` 形状；材料、分析等由服务层映射为页面模型。`VITE_API_BASE_URL` 应包含 `/api/v1`；通用请求与 SSE 适配器会带上 Bearer Authorization。前后端当前的代码适配与本地 H5 验收记录见 [一期收尾记录](docs/phase-one-closeout.md)；关闭 Mock 后仍须按真实账号和目标设备验收，不要将单一 H5 请求成功视为小程序全链路通过。
 
 ## 测试与部署
 
@@ -106,7 +107,7 @@ docker build -t law-backend:0.1.0 .
 
 任务队列一期采用 PostgreSQL 的 `FOR UPDATE SKIP LOCKED`，租约、随机 fencing token、指数退避和业务结果同库保存；进程崩溃不丢任务，过期旧 Worker 不能提交结果。数据库全局短事务串行化 AI 资源准入，避免多实例绕过并发限制。后续吞吐需要时再迁移 Redis/Celery；本期不需要 Redis。
 
-代理示例见 `docs/nginx.conf`，必须关闭 SSE 缓冲。微信端使用 `wx.request(enableChunked)` 的分块适配器，仍需 iOS/Android 真机验证 UTF-8 跨块、主动取消、断网与代理行为。当前没有真实微信、DeepSeek、阿里云账号验证记录。
+代理示例见 `docs/nginx.conf`，必须关闭 SSE 缓冲。微信端使用 `wx.request(enableChunked)` 的分块适配器，仍需 iOS/Android 真机验证 UTF-8 跨块、主动取消、断网与代理行为。真实模型和微信凭据验证范围见 `docs/validation.md`，不替代完整微信登录和端侧验收。
 
 ## 官方接口参考
 

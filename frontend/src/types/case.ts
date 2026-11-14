@@ -18,18 +18,65 @@ export type EvidenceUploadStatus = "not_uploaded" | "partial" | "completed";
 
 export type CaseStatus = "active" | "archived" | "deleted";
 
+export type DraftCaseType = "民事" | "刑事" | "行政" | "不确定";
+
+export type HandlingIdentity = "" | "本人办理" | "代理他人";
+
+export interface CaseDraftFile {
+  name: string;
+  sizeText: string;
+  status: "ready" | "failed";
+}
+
+export type DraftPendingFieldKey =
+  | "title"
+  | "caseType"
+  | "stage"
+  | "claim"
+  | "parties";
+
+export type DraftPendingFields = Partial<Record<DraftPendingFieldKey, boolean>>;
+
+export interface CaseDraftForm {
+  step: "input" | "draft";
+  title: string;
+  caseType: "" | DraftCaseType;
+  stage: string;
+  summary: string;
+  rawSummary: string;
+  claim: string;
+  handlingIdentity: HandlingIdentity;
+  partyRole: string;
+  ourParties: string[];
+  opponentParties: string[];
+  files: CaseDraftFile[];
+  aiOrganized: boolean;
+  pendingFields: DraftPendingFields;
+}
+
 export interface CaseSummary {
   id: number;
   title: string;
   case_type: CaseType;
   procedure: CaseProcedure;
+  procedure_label?: string;
   analysis_status: CaseAnalysisStatus;
   evidence_upload_status: EvidenceUploadStatus;
+  evidence_label?: string;
   win_rate: number | null;
   win_rate_updated_at: string | null;
   status: CaseStatus;
   created_at: string;
   updated_at: string;
+  case_type_label?: string;
+  summary?: string;
+  claim?: string;
+  handling_identity?: string;
+  party_role?: string;
+  our_parties?: string[];
+  opponent_parties?: string[];
+  files?: CaseDraftFile[];
+  is_local?: boolean;
 }
 
 export type MaterialStatus =
@@ -82,6 +129,7 @@ export interface EvidenceRequirement {
   title: string;
   purpose: string;
   collection: string;
+  source?: "ai" | "manual";
 }
 
 export interface MaterialFile {
@@ -89,6 +137,7 @@ export interface MaterialFile {
   name: string;
   type: string;
   mime_type?: string;
+  parse_status?: string;
 }
 
 export interface CaseMaterial {
@@ -115,6 +164,7 @@ export interface CaseDocument {
   name: string;
   type: string;
   mime_type?: string;
+  parse_status?: string;
   uploader: string;
   uploaded_at: string;
   category: DocumentCategoryLabel;

@@ -8,8 +8,8 @@ const emit = defineEmits<{
   (e: "agree"): void;
 }>();
 
-function openAgreement() {
-  uni.navigateTo({ url: "/pages/agreement/index" });
+function openAgreement(docType: "user_service" | "privacy_policy" | "disclaimer") {
+  uni.navigateTo({ url: `/pages/agreement/index?docType=${docType}` });
 }
 </script>
 
@@ -20,9 +20,11 @@ function openAgreement() {
       <text class="modal-title">请阅读勾选协议</text>
       <view class="modal-sub">
         <text>已阅读</text>
-        <text class="modal-link" @click="openAgreement">用户服务、隐私政策</text>
+        <text class="modal-link" @click="openAgreement('user_service')">用户服务</text>
+        <text>、</text>
+        <text class="modal-link" @click="openAgreement('privacy_policy')">隐私政策</text>
         <text> 和 </text>
-        <text class="modal-link" @click="openAgreement">免费声明</text>
+        <text class="modal-link" @click="openAgreement('disclaimer')">免责声明</text>
       </view>
       <view class="modal-actions">
         <view class="modal-btn modal-btn--ghost" @click="emit('close')">不同意</view>

@@ -13,7 +13,7 @@ class Settings(BaseSettings):
   env: Literal["development", "test", "production"] = "development"
   database_url: SecretStr = SecretStr("postgresql+asyncpg://localhost/law_dev")
   allow_dev_login: bool = False
-  cors_origins: list[str] = ["http://localhost:5173"]
+  cors_origins: list[str] = ["http://localhost:5173", "http://127.0.0.1:5173"]
   session_hours: int = Field(24, ge=1, le=720)
   deepseek_api_key: SecretStr = SecretStr("")
   deepseek_base_url: str = "https://api.deepseek.com"
@@ -22,6 +22,13 @@ class Settings(BaseSettings):
   embedding_base_url: str = "https://dashscope.aliyuncs.com/compatible-mode/v1"
   embedding_model: str = "text-embedding-v4"
   embedding_dimensions: int = 1536
+  ocr_provider: Literal["alibaba"] = "alibaba"
+  ocr_access_key_id: SecretStr = SecretStr("")
+  ocr_access_key_secret: SecretStr = SecretStr("")
+  ocr_region: str = "cn-hangzhou"
+  ocr_model: str = "RecognizeGeneral"
+  ocr_min_confidence: float = Field(0.85, ge=0, le=1)
+  ocr_max_pages: int = Field(100, ge=1, le=500)
   ai_timeout_seconds: float = Field(120, ge=1, le=600)
   upstream_read_timeout_seconds: float = Field(30, ge=1, le=120)
   max_concurrent_streams: int = Field(8, ge=1, le=100)
@@ -56,6 +63,8 @@ class Settings(BaseSettings):
       raise ValueError("当前 schema 使用 vector(1536)，请先迁移数据库与索引")
     if self.chunk_overlap >= self.chunk_chars:
       raise ValueError("chunk_overlap 必须小于 chunk_chars")
+    if self.ocr_model != "RecognizeGeneral":
+      raise ValueError("当前只支持阿里云 RecognizeGeneral OCR")
     if self.job_timeout_seconds >= self.job_lease_seconds:
       raise ValueError("任务超时必须小于租约时间")
     return self

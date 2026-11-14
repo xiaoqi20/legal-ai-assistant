@@ -1,0 +1,2513 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>律法AI · 首页「新增案件」入口三方案原型对比</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  html, body {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+    display: block;
+    background: #eef2f8;
+  }
+
+  .board {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 24px 20px 48px;
+  }
+
+  .board-head {
+    background: #fff;
+    border-radius: 16px;
+    padding: 20px 24px;
+    box-shadow: 0 6px 24px rgba(30, 60, 120, 0.06);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .board-title h1 {
+    margin: 0 0 6px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2430;
+  }
+
+  .board-title p {
+    margin: 0;
+    font-size: 13px;
+    color: #667085;
+    line-height: 1.6;
+  }
+
+  .board-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .ctrl-btn {
+    height: 34px;
+    padding: 0 14px;
+    border-radius: 17px;
+    font-size: 13px;
+    font-weight: 500;
+    background: #f3f5f9;
+    color: #475467;
+    border: 1px solid #e4e7ec;
+    transition: all 0.15s;
+  }
+
+  .ctrl-btn:hover {
+    background: #eaf1ff;
+    color: var(--blue);
+    border-color: #c7d9ff;
+  }
+
+  .ctrl-btn.on {
+    background: var(--blue);
+    color: #fff;
+    border-color: var(--blue);
+    box-shadow: 0 4px 12px rgba(33, 92, 255, 0.22);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(360px, 1fr));
+    gap: 24px;
+    align-items: start;
+  }
+
+  .grid.single {
+    grid-template-columns: minmax(360px, 420px);
+    justify-content: center;
+  }
+
+  .col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .col.hidden {
+    display: none !important;
+  }
+
+  .spec-card {
+    width: 375px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 16px 18px;
+    box-shadow: 0 4px 18px rgba(30, 60, 120, 0.06);
+    border: 1px solid #edf0f6;
+  }
+
+  .spec-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .spec-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1f2430;
+  }
+
+  .spec-badge {
+    height: 22px;
+    padding: 0 10px;
+    border-radius: 11px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .spec-badge.rec {
+    background: #e8f1ff;
+    color: #215cff;
+  }
+
+  .spec-badge.alt {
+    background: #f2f4f7;
+    color: #475467;
+  }
+
+  .spec-badge.warn {
+    background: #fff3e6;
+    color: #c25e00;
+  }
+
+  .spec-desc {
+    font-size: 12px;
+    color: #555e6d;
+    line-height: 1.65;
+    margin: 0 0 10px;
+  }
+
+  .spec-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .spec-list li.pro { color: #2b7a4b; }
+  .spec-list li.con { color: #b45309; }
+
+  /* 独立手机画布（精确复用 375x812 原型尺寸与样式） */
+  .phone-frame {
+    width: 375px;
+    height: 812px;
+    border-radius: 36px;
+    background: #fff;
+    position: relative;
+    overflow: hidden;
+    box-shadow:
+      0 20px 50px rgba(25, 48, 96, 0.16),
+      0 0 0 8px #1f2430;
+  }
+
+  .phone-inner {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .phone-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 200;
+    pointer-events: none;
+  }
+
+  .phone-overlay > * {
+    pointer-events: auto;
+  }
+
+  /* 方案一：列表标题栏右侧 + 新建案件 */
+  .case-section-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 18px 10px;
+  }
+
+  .case-section-left {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #2c313c;
+  }
+
+  .case-section-left::before {
+    content: "";
+    width: 3.5px;
+    height: 14px;
+    border-radius: 2px;
+    background: var(--blue);
+  }
+
+  .case-count {
+    font-size: 12px;
+    font-weight: 500;
+    color: #8c95a6;
+  }
+
+  .add-case-pill {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 15px;
+    background: #eaf1ff;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid rgba(33, 92, 255, 0.16);
+    transition: transform 0.12s, background 0.15s;
+  }
+
+  .add-case-pill:active {
+    transform: scale(0.97);
+    background: #dce8ff;
+  }
+
+  .add-case-pill .icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.4;
+  }
+
+  /* 方案二：搜索框同行右侧 + 新建 */
+  .search-with-add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 18px 10px;
+  }
+
+  .search-with-add .search-box {
+    flex: 1;
+    min-width: 0;
+    height: 44px;
+    padding: 0 6px 0 12px;
+    gap: 6px;
+  }
+
+  .search-with-add .search-btn {
+    height: 34px;
+    padding: 0 12px;
+    border-radius: 17px;
+    font-size: 13px;
+  }
+
+  .search-add-btn {
+    flex: none;
+    height: 44px;
+    padding: 0 13px;
+    border-radius: 22px;
+    background: #fff;
+    border: 1.5px solid #cfe0ff;
+    box-shadow: 0 4px 16px rgba(40, 80, 150, 0.08);
+    color: var(--blue);
+    font-size: 13px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: transform 0.12s, background 0.15s;
+  }
+
+  .search-add-btn:active {
+    transform: scale(0.97);
+    background: #f0f5ff;
+  }
+
+  .search-add-btn .icon {
+    width: 15px;
+    height: 15px;
+    stroke-width: 2.4;
+  }
+
+  /* 方案三：右下角悬浮 FAB */
+  .case-fab {
+    position: absolute;
+    right: 16px;
+    bottom: 108px;
+    z-index: 45;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(155deg, #4b86ff 0%, #215cff 100%);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    box-shadow: 0 10px 24px rgba(33, 92, 255, 0.34);
+    transition: transform 0.15s;
+  }
+
+  .case-fab:active {
+    transform: scale(0.95);
+  }
+
+  .case-fab .icon {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2.4;
+  }
+
+  .case-fab span {
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  /* 空状态增强 */
+  .empty-enhanced {
+    padding: 56px 24px 36px;
+    text-align: center;
+    color: #98a2b3;
+    font-size: 13px;
+  }
+
+  .empty-enhanced .icon {
+    width: 48px;
+    height: 48px;
+    margin: 0 auto 12px;
+    color: #cbd5e1;
+  }
+
+  .empty-cta {
+    margin: 16px auto 0;
+    height: 40px;
+    padding: 0 22px;
+    border-radius: 20px;
+    background: var(--blue);
+    color: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 6px 16px rgba(33, 92, 255, 0.24);
+  }
+
+  .empty-cta .icon {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    color: #fff;
+    stroke-width: 2.4;
+  }
+
+  /* 独立「新建案件」页面（对齐 detail-page 与 role-page 项目风格） */
+  .create-page {
+    position: absolute;
+    inset: 0;
+    z-index: 220;
+    display: flex;
+    flex-direction: column;
+    padding-top: var(--status-h);
+    padding-bottom: var(--home-h);
+    background:
+      radial-gradient(95% 40% at 100% 0%, rgba(112, 186, 255, 0.55) 0%, rgba(112, 186, 255, 0) 65%),
+      radial-gradient(85% 36% at 40% 8%, rgba(231, 214, 255, 0.5) 0%, rgba(231, 214, 255, 0) 70%),
+      linear-gradient(180deg, #fbfcff 0%, #f3f7ff 24%, #f7f9ff 100%);
+    animation: pageIn 0.18s ease;
+  }
+
+  .create-nav-fill {
+    height: 24px;
+    padding: 0 9px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid #dce6ff;
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .create-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 8px 14px 12px;
+    scrollbar-width: none;
+  }
+
+  .create-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .create-card {
+    background: #fff;
+    border-radius: 14px;
+    padding: 15px 14px 4px;
+    margin-bottom: 12px;
+    box-shadow: 0 4px 16px rgba(35, 70, 120, 0.06);
+  }
+
+  .create-card .section-title {
+    margin: 0 0 14px;
+    font-size: 15px;
+    justify-content: space-between;
+  }
+
+  .create-card .section-title-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .create-card .section-title-left::before {
+    content: "";
+    width: 4px;
+    height: 16px;
+    border-radius: 2px;
+    background: var(--blue);
+  }
+
+  .create-card .section-title::before {
+    display: none;
+  }
+
+  .form-item {
+    margin-bottom: 11px;
+  }
+
+  .form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 6px;
+  }
+
+  .form-label em {
+    font-style: normal;
+    color: #f05b5b;
+    margin-left: 2px;
+  }
+
+  .form-sub {
+    font-size: 11px;
+    font-weight: 400;
+    color: #9aa1ad;
+  }
+
+  .form-input {
+    width: 100%;
+    height: 40px;
+    border-radius: 20px;
+    background: #f6f8fc;
+    border: 1px solid #e6ebf4;
+    padding: 0 14px;
+    font-size: 13.5px;
+    color: #333;
+    outline: none;
+  }
+
+  .form-textarea {
+    width: 100%;
+    min-height: 68px;
+    border-radius: 12px;
+    background: #f6f8fc;
+    border: 1px solid #e6ebf4;
+    padding: 9px 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #333;
+    outline: none;
+    resize: none;
+  }
+
+  .form-input::placeholder,
+  .form-textarea::placeholder {
+    color: #b4bac5;
+  }
+
+  .form-input:focus,
+  .form-textarea:focus {
+    border-color: var(--blue);
+    background: #fff;
+  }
+
+  .pill-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .opt-pill {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 15px;
+    background: #fff;
+    border: 1px solid #dfe3ec;
+    font-size: 12px;
+    color: #666;
+  }
+
+  .opt-pill.on {
+    background: #dde7ff;
+    border-color: transparent;
+    color: var(--blue);
+    font-weight: 600;
+  }
+
+  .stage-empty-tip {
+    font-size: 12px;
+    color: #9aa1ad;
+    background: #f7f8fb;
+    border-radius: 10px;
+    padding: 10px 12px;
+  }
+
+  .reveal-block {
+    animation: revealIn 0.2s ease;
+  }
+
+  @keyframes revealIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .step-badge {
+    height: 20px;
+    padding: 0 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    background: #f2f4f7;
+    color: #7c8594;
+  }
+
+  .step-badge.done {
+    background: #e8f8ed;
+    color: #2b8a4e;
+  }
+
+  .step-badge.soft {
+    background: #eef4ff;
+    color: var(--blue);
+  }
+
+  .card-toggle-head {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 11px;
+    text-align: left;
+  }
+
+  .card-toggle-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .card-toggle-head .icon {
+    width: 16px;
+    height: 16px;
+    color: #8b95a7;
+    transition: transform 0.15s;
+  }
+
+  .card-toggle-head.open .icon {
+    transform: rotate(180deg);
+  }
+
+  .card-preview-note {
+    font-size: 11.5px;
+    color: #8c95a6;
+    margin: -4px 0 11px;
+    line-height: 1.45;
+  }
+
+  .rule-toggle-btn {
+    font-size: 11px;
+    color: #6b7892;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  .sub-expand-btn {
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 15px;
+    background: #f4f7ff;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .sub-expand-btn .icon {
+    width: 13px;
+    height: 13px;
+    stroke-width: 2.3;
+  }
+
+  /* 首批案件材料上传区（紧凑模式） */
+  .upload-box {
+    background: #f5f8ff;
+    border: 1px solid #e1ebff;
+    border-radius: 11px;
+    padding: 8px 10px;
+  }
+
+  .upload-actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .upload-left-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .upload-pick-btn {
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid #cddcff;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .upload-pick-btn .icon {
+    width: 13px;
+    height: 13px;
+    stroke-width: 2.2;
+  }
+
+  .upload-sample-btn {
+    font-size: 11px;
+    color: #66789c;
+  }
+
+  .upload-hint {
+    font-size: 11px;
+    color: #7c879b;
+    margin-top: 6px;
+    line-height: 1.45;
+  }
+
+  .upload-hint b {
+    color: #c25e00;
+    font-weight: 600;
+  }
+
+  .upload-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    margin-top: 10px;
+  }
+
+  .upload-file-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #e6ecf6;
+    border-radius: 10px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #333;
+  }
+
+  .upload-file-item.failed {
+    border-color: #f8c6c6;
+    background: #fff9f9;
+  }
+
+  .upload-file-tag {
+    flex: none;
+    height: 18px;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: #eaf1ff;
+    color: var(--blue);
+    font-size: 10px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .upload-file-tag.pdf {
+    background: #ffecec;
+    color: #e24c4c;
+  }
+
+  .upload-file-name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .upload-file-size {
+    flex: none;
+    font-size: 11px;
+    color: #98a2b3;
+  }
+
+  .upload-file-retry {
+    flex: none;
+    font-size: 11px;
+    font-weight: 600;
+    color: #e24c4c;
+    background: #ffecec;
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 11px;
+  }
+
+  .upload-file-rm {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #f2f4f7;
+    color: #667085;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 折叠当事人卡 */
+  .party-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: 12px;
+  }
+
+  .party-toggle .icon {
+    width: 16px;
+    height: 16px;
+    color: #8b95a7;
+    transition: transform 0.15s;
+  }
+
+  .party-toggle.open .icon {
+    transform: rotate(180deg);
+  }
+
+  .multi-party-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .multi-party-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .multi-party-row .form-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .party-rm-btn {
+    flex: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #f2f4f7;
+    color: #667085;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .add-party-btn {
+    margin-top: 6px;
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 14px;
+    background: #f2f6ff;
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .add-party-btn .icon {
+    width: 13px;
+    height: 13px;
+    stroke-width: 2.4;
+  }
+
+  .create-footer {
+    position: relative;
+    flex: none;
+    padding: 8px 16px 10px;
+    background: #ffffff;
+    border-top: 1px solid #ecf0f8;
+    box-shadow: 0 -4px 12px rgba(35, 70, 120, 0.04);
+    z-index: 20;
+  }
+
+  .create-footer-hint {
+    text-align: center;
+    font-size: 11px;
+    color: #7b869c;
+    margin-bottom: 6px;
+  }
+
+  /* AI 帮我整理区 */
+  .ai-assist-card {
+    background: linear-gradient(160deg, #f3f7ff 0%, #ffffff 60%, #f7faff 100%);
+    border: 1px solid #d9e6ff;
+    border-radius: 14px;
+    padding: 12px 13px;
+    margin-bottom: 10px;
+    box-shadow: 0 4px 14px rgba(45, 111, 255, 0.06);
+  }
+
+  .ai-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .ai-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1e2a45;
+  }
+
+  .ai-spark {
+    width: 19px;
+    height: 19px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #2d6fff 0%, #6c8eff 100%);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10.5px;
+    font-weight: 800;
+    flex: none;
+  }
+
+  .ai-organize-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 9px;
+  }
+
+  .ai-organize-tip {
+    font-size: 11px;
+    color: #7f8ba1;
+  }
+
+  .ai-organize-btn {
+    height: 32px;
+    padding: 0 14px;
+    border-radius: 16px;
+    background: #eaf1ff;
+    border: 1px solid #bdd3ff;
+    color: var(--blue);
+    font-size: 12.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    flex: none;
+  }
+
+  .ai-organize-btn:disabled {
+    background: #f3f5f9;
+    border-color: #e4e8f0;
+    color: #a6b0c0;
+  }
+
+  .ai-restore-btn {
+    height: 22px;
+    padding: 0 8px;
+    border-radius: 11px;
+    background: #eef4ff;
+    color: var(--blue);
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .pending-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    height: 18px;
+    padding: 0 7px;
+    border-radius: 9px;
+    background: #fff4e5;
+    border: 1px solid #ffd59e;
+    color: #c25e00;
+    font-size: 10px;
+    font-weight: 700;
+    margin-left: 6px;
+  }
+
+  .field-pending {
+    padding: 8px 10px;
+    margin-left: -10px;
+    margin-right: -10px;
+    border-radius: 10px;
+    background: #fffaf2;
+    border: 1px solid #ffe0b5;
+  }
+
+  .create-nav-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .create-nav-clear {
+    height: 28px;
+    padding: 0 9px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.72);
+    color: #667085;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .draft-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #ff7a00;
+    margin-left: 3px;
+    vertical-align: middle;
+  }
+
+  /* 极简 Step1 AI 录入台与 Step2 轻量进度条 */
+  .intake-hero {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 2px 2px 12px;
+  }
+
+  .intake-hero img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    flex: none;
+  }
+
+  .intake-hero-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1c273d;
+    line-height: 1.35;
+  }
+
+  .intake-hero-sub {
+    font-size: 11.5px;
+    color: #61708a;
+    margin-top: 2px;
+    line-height: 1.45;
+  }
+
+  .intake-card {
+    padding: 14px 14px 13px;
+  }
+
+  .intake-textarea {
+    min-height: 132px;
+    background: #f7f9fd;
+    border: 1.5px solid #e6ebf5;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .prompt-chips-wrap {
+    margin-top: 11px;
+    padding-top: 10px;
+    border-top: 1px dashed #e9eff8;
+  }
+
+  .prompt-chips-label {
+    font-size: 11px;
+    color: #828ea3;
+    margin-bottom: 7px;
+  }
+
+  .prompt-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+  }
+
+  .prompt-chip {
+    height: 28px;
+    padding: 0 11px;
+    border-radius: 14px;
+    background: #f2f6ff;
+    border: 1px solid #dce6ff;
+    color: #2f59c4;
+    font-size: 11.5px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .prompt-chip:active {
+    background: #e1ebff;
+  }
+
+  .upload-card {
+    padding: 13px 14px 11px;
+  }
+
+  .upload-dropzone {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 13px 12px;
+    border-radius: 12px;
+    background: #f8faff;
+    border: 1.5px dashed #bfd4ff;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+
+  .upload-dropzone:active {
+    background: #eef4ff;
+    border-color: var(--blue);
+  }
+
+  .drop-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: 11px;
+    background: #e6efff;
+    color: var(--blue);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+  }
+
+  .drop-icon .icon {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.1;
+  }
+
+  .drop-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1f2a44;
+    line-height: 1.35;
+  }
+
+  .drop-sub {
+    font-size: 11px;
+    color: #778399;
+    margin-top: 3px;
+    line-height: 1.45;
+  }
+
+  .drop-sub b {
+    color: #c25e00;
+    font-weight: 600;
+  }
+
+  .upload-card-foot {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 9px;
+    font-size: 11px;
+    color: #8b95a8;
+  }
+
+  .upload-rules-drawer {
+    margin-top: 8px;
+    padding: 9px 10px;
+    border-radius: 10px;
+    background: #f6f8fc;
+    font-size: 11px;
+    line-height: 1.55;
+    color: #5d6a80;
+  }
+
+  .upload-rules-actions {
+    margin-top: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .btn-primary .icon {
+    width: 15px;
+    height: 15px;
+    margin-right: 5px;
+    vertical-align: -2px;
+  }
+
+  .step-footer-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-soft-back {
+    flex: none;
+    height: 44px;
+    padding: 0 14px;
+    border-radius: 22px;
+    background: #f2f5fc;
+    color: #4a5975;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .step-footer-row .btn-primary {
+    flex: 1;
+  }
+
+  /* 样式 A：第 2 步小诺对话气泡合并式引导 */
+  .xiaonuo-draft-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 9px;
+    margin: 2px 0 12px;
+  }
+
+  .xiaonuo-draft-row img {
+    width: 38px;
+    height: 38px;
+    object-fit: contain;
+    flex: none;
+    margin-top: 2px;
+  }
+
+  .xiaonuo-bubble {
+    flex: 1;
+    min-width: 0;
+    background: linear-gradient(135deg, #ffffff 0%, #f3f7ff 100%);
+    border: 1px solid #dce7ff;
+    border-radius: 4px 14px 14px 14px;
+    padding: 9px 12px;
+    box-shadow: 0 3px 12px rgba(45, 111, 255, 0.06);
+  }
+
+  .xiaonuo-bubble-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 3px;
+  }
+
+  .xiaonuo-bubble-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #1f2e4d;
+  }
+
+  .xiaonuo-bubble-back {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--blue);
+    flex: none;
+  }
+
+  .xiaonuo-bubble-text {
+    font-size: 11.5px;
+    color: #5b6a84;
+    line-height: 1.45;
+  }
+
+  /* 建案后详情页（沿用原项目 .detail-page 样式，仅补充交互穿透与模拟追问记录） */
+  .phone-overlay > .detail-page {
+    pointer-events: auto;
+  }
+
+  .detail-chat-replies {
+    margin-top: 16px;
+  }
+
+  .detail-chat-reply {
+    background: #f3f7ff;
+    border-left: 3px solid var(--blue);
+    border-radius: 0 10px 10px 0;
+    padding: 9px 11px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #2c3850;
+  }
+
+  /* 选型标签高亮提示框（方便对比） */
+  .entry-ring {
+    position: relative;
+  }
+
+  .highlight-outline .add-case-pill,
+  .highlight-outline .search-add-btn,
+  .highlight-outline .case-fab {
+    outline: 2px dashed #ff6b35;
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 1220px) {
+    .grid {
+      grid-template-columns: repeat(auto-fit, minmax(375px, 1fr));
+    }
+  }
+
+  @media (max-width: 440px) {
+    .board { padding: 12px 8px 32px; }
+    .spec-card, .phone-frame { width: 100%; max-width: 375px; }
+  }
+</style>
+</head>
+<body>
+<div class="board">
+  <header class="board-head">
+    <div class="board-title">
+      <h1>首页「新增案件」入口 · 三方案可交互原型</h1>
+      <p>基于现有原型 <a href="index.html">pratice/index.html</a> 的 375×812 首页与子页视觉风格生成。建档采用 AI 优先两步流：<strong>描述情况 / 上传材料 → AI 生成建档草稿 → 用户核对修改（未识别项标「待确认」且可跳过）→ 创建案件 → 进入详情继续咨询或补充材料</strong>，不再单独保留手填建档入口。</p>
+    </div>
+    <div class="board-controls">
+      <button class="ctrl-btn on" data-view="all">三方案并排</button>
+      <button class="ctrl-btn" data-view="1">仅看方案一</button>
+      <button class="ctrl-btn" data-view="2">仅看方案二</button>
+      <button class="ctrl-btn" data-view="3">仅看方案三</button>
+      <button class="ctrl-btn" id="toggle-highlight">标注入口位置</button>
+      <button class="ctrl-btn" id="toggle-empty">预览空状态</button>
+      <button class="ctrl-btn" id="reset-demo">重置演示数据</button>
+    </div>
+  </header>
+
+  <main class="grid" id="grid">
+    <!-- 方案一 -->
+    <section class="col" data-col="1">
+      <article class="spec-card">
+        <div class="spec-head">
+          <span class="spec-name">方案一：列表标题栏右侧「+ 新建案件」</span>
+          <span class="spec-badge rec">推荐</span>
+        </div>
+        <p class="spec-desc">在搜索框下方、卡片列表上方新增紧凑标题行，右侧放置轻量胶囊按钮；列表为空时居中提供主按钮兜底。</p>
+        <ul class="spec-list">
+          <li class="pro">+ 不挤占微信小程序右上角胶囊区域</li>
+          <li class="pro">+ 语义明确，且左侧可自然扩展「全部/已分析」筛选</li>
+          <li class="con">- 占约 42px 垂直高度，列表长时随页面向上滚出</li>
+        </ul>
+      </article>
+      <div class="phone-frame" id="phone-1"></div>
+    </section>
+
+    <!-- 方案二 -->
+    <section class="col" data-col="2">
+      <article class="spec-card">
+        <div class="spec-head">
+          <span class="spec-name">方案二：搜索框同行右侧「+ 新建」</span>
+          <span class="spec-badge alt">备选（省高度）</span>
+        </div>
+        <p class="spec-desc">保持原型的纵深行高不变，将搜索框略收窄，右侧并列白底蓝框「+ 新建」按钮，保留首屏最大卡片露头比例。</p>
+        <ul class="spec-list">
+          <li class="pro">+ 零额外垂直高度消耗，首屏卡片展示完全对齐原稿</li>
+          <li class="pro">+ 白底描边与蓝底「搜索」按钮形成主次区分</li>
+          <li class="con">- 375px 窄屏下搜索框宽度略窄，输入长词可视字数减少</li>
+        </ul>
+      </article>
+      <div class="phone-frame" id="phone-2"></div>
+    </section>
+
+    <!-- 方案三 -->
+    <section class="col" data-col="3">
+      <article class="spec-card">
+        <div class="spec-head">
+          <span class="spec-name">方案三：右下角悬浮球（FAB）</span>
+          <span class="spec-badge warn">注意遮挡</span>
+        </div>
+        <p class="spec-desc">延续子页面「返回案件」悬浮球语言，在底部问答栏上方右侧放置常驻圆形「+ 新建」按钮，滚动时始终可达。</p>
+        <ul class="spec-list">
+          <li class="pro">+ 无论列表滚动多深，单手拇指随时可点击建案</li>
+          <li class="con">- 会直接压住底部可见卡片右侧的「胜诉率」仪表盘</li>
+          <li class="con">- 与右上小诺、底部问答栏同屏，整体视觉焦点偏多</li>
+        </ul>
+      </article>
+      <div class="phone-frame" id="phone-3"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const ICONS = {
+    menu: '<path d="M4 6h16M4 12h16M4 18h16"/>',
+    back: '<path d="M15 19l-7-7 7-7"/>',
+    right: '<path d="M9 5l7 7-7 7"/>',
+    search: '<circle cx="11" cy="11" r="7"/><path d="M20.5 20.5l-4.2-4.2"/>',
+    plus: '<path d="M12 5v14M5 12h14"/>',
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+    send: '<path d="M3.4 20.4L21 12 3.4 3.6l2.9 6.9L15 12 6.3 13.5l-2.9 6.9z"/>',
+    folder: '<path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    clipboard: '<rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M9 9h6M9 13h6M9 17h4"/>',
+    filetext: '<path d="M7 3h7l5 5v13H7zM14 3v5h5M10 12h6M10 16h6"/>',
+    chart: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+    close: '<path d="M6 6l12 12M18 6L6 18"/>',
+    down: '<path d="M6 9l6 6 6-6"/>',
+    upload: '<path d="M12 16V4M7 9l5-5 5 5M4 20h16"/>',
+    sparkle: '<path d="M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9L12 3z"/>'
+  };
+
+  function icon(name, cls) {
+    return '<svg class="icon ' + (cls || '') + '" viewBox="0 0 24 24" aria-hidden="true">' + ICONS[name] + '</svg>';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (m) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+    });
+  }
+
+  const INITIAL_CASES = [
+    {
+      id: 'c1',
+      title: '王家村房屋拆迁补偿纠纷案',
+      status: 'analyzed',
+      statusText: '已分析',
+      evidenceUploaded: true,
+      evidenceText: '已完成',
+      procedure: '一审',
+      winRate: 80
+    },
+    {
+      id: 'c2',
+      title: '张某与李某民间借贷纠纷案',
+      status: 'unanalyzed',
+      statusText: '未分析',
+      evidenceUploaded: false,
+      evidenceText: '未上传',
+      procedure: '一审',
+      winRate: null
+    },
+    {
+      id: 'c3',
+      title: '某科技公司劳动合同争议案',
+      status: 'analyzing',
+      statusText: '分析中',
+      evidenceUploaded: true,
+      evidenceText: '已完成',
+      procedure: '仲裁',
+      winRate: null
+    },
+    {
+      id: 'c4',
+      title: '城东商铺租赁合同违约纠纷案',
+      status: 'analyzing',
+      statusText: '分析中',
+      evidenceUploaded: true,
+      evidenceText: '已完成',
+      procedure: '一审',
+      winRate: null
+    }
+  ];
+
+  const state = {
+    emptyMode: false,
+    highlight: false,
+    phones: {
+      1: { cases: cloneCases(), search: '', view: 'list', activeCaseId: null, detailDraft: '', detailReplies: [], form: defaultForm() },
+      2: { cases: cloneCases(), search: '', view: 'list', activeCaseId: null, detailDraft: '', detailReplies: [], form: defaultForm() },
+      3: { cases: cloneCases(), search: '', view: 'list', activeCaseId: null, detailDraft: '', detailReplies: [], form: defaultForm() }
+    }
+  };
+
+  function cloneCases() {
+    return INITIAL_CASES.map(function (c) { return Object.assign({}, c); });
+  }
+
+  const STAGE_OPTIONS = {
+    '民事': ['尚未起诉/诉前咨询', '一审', '二审', '再审', '仲裁', '执行', '不确定'],
+    '刑事': ['侦查阶段', '审查起诉', '一审', '二审', '再审', '执行', '不确定'],
+    '行政': ['尚未起诉/复议前', '行政复议', '一审', '二审', '再审', '执行', '不确定'],
+    '不确定': ['尚未起诉/诉前咨询', '已进入诉讼/仲裁', '不确定']
+  };
+
+  const ROLE_OPTIONS = {
+    '民事': ['原告', '被告', '申请人', '被申请人', '第三人', '不确定'],
+    '刑事': ['犯罪嫌疑人/被告人', '被害人', '近亲属', '不确定'],
+    '行政': ['原告/申请人', '被告（行政机关）', '第三人', '不确定'],
+    '不确定': ['主张权利方', '被诉/被要求方', '不确定']
+  };
+
+  function defaultForm() {
+    return {
+      step: 'input',
+      title: '',
+      caseType: '',
+      stage: '',
+      summary: '',
+      rawSummary: '',
+      claim: '',
+      showClaim: false,
+      files: [],
+      showUploadRules: false,
+      showParties: false,
+      handlingIdentity: '',
+      partyRole: '',
+      showPartyNames: false,
+      ourParties: [''],
+      opponentParties: [''],
+      aiOrganized: false,
+      pendingFields: {}
+    };
+  }
+
+  function hasDraft(f) {
+    return Boolean(
+      f.title.trim() ||
+      f.caseType ||
+      f.stage ||
+      f.summary.trim() ||
+      f.claim.trim() ||
+      f.files.length > 0 ||
+      f.handlingIdentity ||
+      f.partyRole ||
+      f.ourParties.some(function (x) { return x.trim(); }) ||
+      f.opponentParties.some(function (x) { return x.trim(); })
+    );
+  }
+
+  function pendingBadgeHtml(active) {
+    return active ? '<span class="pending-badge">待确认</span>' : '';
+  }
+
+  const CASE_RULES = [
+    { caseType: '刑事', title: '涉嫌刑事案件咨询', re: /(刑事|侦查|取保|诈骗|盗窃|公安立案|检察院|嫌疑人|犯罪|刑拘)/ },
+    { caseType: '行政', title: '行政争议案件', re: /(行政复议|行政处罚|处罚决定|市场监管|城管|交警|政府信息公开|行政诉讼|行政)/ },
+    { caseType: '民事', title: '某小区物业服务合同纠纷案', re: /物业.*(?:漏水|维修|合同|物业费)|(?:漏水|维修).*物业/ },
+    { caseType: '民事', title: '装修工程款拖欠纠纷案', re: /装修.*(?:尾款|拖欠|工程)|(?:尾款|拖欠).*装修/ },
+    { caseType: '民事', title: '房屋买卖合同纠纷案', re: /房屋买卖|买房合同|购房合同/ },
+    { caseType: '民事', title: '民间借贷纠纷案', re: /(借款|借给|借条|欠条|欠款|出借|民间借贷|本金|利息|还款|逾期)/ },
+    { caseType: '民事', title: '劳动争议纠纷案', re: /(劳动|工资|辞退|加班|仲裁委|社保)/ },
+    { caseType: '民事', title: '房屋租赁合同纠纷案', re: /(租赁|房租|退租|押金)/ },
+    { caseType: '民事', title: '', re: /(合同|漏水|货款|尾款|装修|房屋|买卖|侵权|赔偿|违约|离婚|民事|起诉状)/ }
+  ];
+
+  function analyzeWithAi(f) {
+    const readyFiles = f.files.filter(function (item) { return item.status !== 'failed'; });
+    const rawText = f.summary.trim();
+    /* 仅基于用户输入的文字描述进行模拟整理，不将文件名冒充文档正文内容 */
+    const corpus = (rawText + ' ' + f.claim.trim()).trim();
+    const pending = {};
+
+    /* 1 & 3. 统一案件类型与案由规则，避免“认出案名却漏掉类型” */
+    let nextType = f.caseType;
+    let matchedRuleTitle = '';
+    for (let i = 0; i < CASE_RULES.length; i++) {
+      const rule = CASE_RULES[i];
+      if (corpus && rule.re.test(corpus)) {
+        if (!nextType) nextType = rule.caseType;
+        if (!matchedRuleTitle && rule.title) matchedRuleTitle = rule.title;
+        if (nextType && matchedRuleTitle) break;
+      }
+    }
+    if (!nextType) pending.caseType = true;
+
+    /* 2. 当前办理阶段：无明确表述时不默认“一审”，标记为待确认 */
+    let nextStage = f.stage;
+    if (!nextStage && corpus) {
+      let guessedStage = '';
+      if (/(尚未起诉|还没起诉|没起诉|诉前|准备起诉|打算起诉|还没去法院)/.test(corpus)) guessedStage = '尚未起诉/诉前咨询';
+      else if (/行政复议|复议中/.test(corpus)) guessedStage = '行政复议';
+      else if (/复议前|刚收到处罚/.test(corpus)) guessedStage = '尚未起诉/复议前';
+      else if (/侦查|刑拘|刑事立案|派出所/.test(corpus)) guessedStage = '侦查阶段';
+      else if (/审查起诉|移送检察/.test(corpus)) guessedStage = '审查起诉';
+      else if (/二审|上诉/.test(corpus)) guessedStage = '二审';
+      else if (/再审|申诉/.test(corpus)) guessedStage = '再审';
+      else if (/仲裁/.test(corpus)) guessedStage = '仲裁';
+      else if (/强制执行|执行阶段/.test(corpus)) guessedStage = '执行';
+      else if (/(一审|已经起诉|收到传票|已立案)/.test(corpus)) guessedStage = '一审';
+
+      if (guessedStage && nextType && (STAGE_OPTIONS[nextType] || []).indexOf(guessedStage) > -1) {
+        nextStage = guessedStage;
+      }
+    }
+    if (!nextStage) pending.stage = true;
+
+    /* 案件名称：采用统一规则命中结果，线索不足时留空并标待确认 */
+    const nextTitle = f.title.trim() || matchedRuleTitle;
+    if (!nextTitle) pending.title = true;
+
+    /* 4. 核心诉求：仅从文字描述提取 */
+    let nextClaim = f.claim.trim();
+    if (!nextClaim && corpus) {
+      const m = rawText.match(/(?:希望|要求|诉求|想看看怎么|想要|请求)([^。；;\n]+)/);
+      if (m && m[1]) {
+        nextClaim = m[1].replace(/^(能|可以)?/, '').trim();
+      } else if (/赔偿|维修|退还|支付|要回欠款|本金|利息|归还/.test(corpus)) {
+        const m2 = corpus.match(/(履行维修[^。；，,]*|赔偿[^。；，,]*|要回[^。；，,]*|退还[^。；，,]*|支付[^。；，,]*|归还[^。；，,]*|追回[^。；，,]*)/);
+        if (m2) nextClaim = m2[1].trim();
+      }
+    }
+    if (!nextClaim) pending.claim = true;
+
+    /* 5. 我方与对方主体：绝不按姓名线索猜立场；仅在文本显式标注己方/对方角色标签时才提取 */
+    let ourList = f.ourParties.filter(function (x) { return x.trim(); });
+    let oppList = f.opponentParties.filter(function (x) { return x.trim(); });
+
+    if (!ourList.length && rawText) {
+      const ourMatch = rawText.match(/(?:我方|委托人|己方)(?:是|为|：|:)?([\u4e00-\u9fa5A-Za-z0-9]{2,18}(?:有限公司|公司|厂)|[\u4e00-\u9fa5]某)/);
+      if (ourMatch && !/^[与和跟同因向借给]/.test(ourMatch[1])) ourList = [ourMatch[1]];
+    }
+    if (!oppList.length && rawText) {
+      const oppLabelMatch = rawText.match(/(?:对方|被告|被申请人)(?:是|为|：|:)([\u4e00-\u9fa5A-Za-z0-9]{2,18}(?:有限公司|公司|厂)|[\u4e00-\u9fa5]某)/);
+      const oppOrgMatch = rawText.match(/(?:向|对|被)([\u4e00-\u9fa5A-Za-z0-9]{2,18}(?:物业服务有限公司|装饰工程有限公司|科技有限公司|有限公司|管理局|派出所))/);
+      const pickedOpp = (oppLabelMatch && oppLabelMatch[1]) || (oppOrgMatch && oppOrgMatch[1]) || '';
+      if (pickedOpp && oppList.indexOf(pickedOpp) === -1 && ourList.indexOf(pickedOpp) === -1) {
+        oppList = [pickedOpp];
+      }
+    }
+    if (!ourList.length || !oppList.length) pending.parties = true;
+
+    /* 6. 回填唯一案情摘要框，诚实标注“模拟整理”，不假装已读取附件正文 */
+    const baseRaw = f.rawSummary || rawText;
+    const summaryParts = [];
+    if (rawText) {
+      const cleanRaw = rawText.replace(/^【(?:模拟整理|案情)摘要】/, '').split('\n')[0];
+      summaryParts.push('【模拟整理摘要】' + cleanRaw);
+      if (readyFiles.length) {
+        summaryParts.push('（原型未读取 ' + readyFiles.length + ' 份附件正文，仅依据上方文字整理）');
+      }
+    } else if (readyFiles.length) {
+      summaryParts.push('【模拟整理（原型演示）】当前原型尚未接入文档正文解析，已暂存 ' + readyFiles.length + ' 份文件（' + readyFiles.map(function (x) { return x.name; }).join('、') + '）。请补充案情描述或手动确认下方字段。');
+    }
+    summaryParts.push('• 案件类型：' + (nextType || '待确认') + ' ｜ 办理阶段：' + (nextStage || '待确认'));
+    summaryParts.push('• 核心诉求：' + (nextClaim || '待确认'));
+
+    f.rawSummary = baseRaw;
+    f.summary = summaryParts.join('\n');
+    f.title = nextTitle;
+    f.caseType = nextType;
+    f.stage = nextStage;
+    f.claim = nextClaim;
+    f.showClaim = true;
+    f.ourParties = ourList.length ? ourList : [''];
+    f.opponentParties = oppList.length ? oppList : [''];
+    if (ourList.length || oppList.length || pending.parties) {
+      f.showParties = true;
+      f.showPartyNames = true;
+    }
+    f.aiOrganized = true;
+    f.step = 'draft';
+    f.pendingFields = pending;
+    return pending;
+  }
+
+  function formatSize(bytes) {
+    if (!bytes) return '128 KB';
+    if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function statusbarHtml() {
+    return '<div class="statusbar">' +
+      '<span class="statusbar-time">12:00</span>' +
+      '<span class="statusbar-icons">' +
+      '<svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><path d="M1.25 6.5h1a1 1 0 0 1 1 1V10a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V7.5a1 1 0 0 1 1-1zM5.75 5h1a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm4.5-2h1a1 1 0 0 1 1 1v6a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zm4.5-2h1a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1z"/></svg>' +
+      '<svg width="17" height="12" viewBox="0 0 17 12" fill="currentColor"><path d="M8.007 2.787a8.64 8.64 0 0 1 5.953 2.379c.12.118.314.116.433-.004l1.156-1.166a.322.322 0 0 0-.003-.456 10.897 10.897 0 0 0-15.08 0 .322.322 0 0 0-.003.456L1.62 5.162c.119.12.312.122.433.004a8.641 8.641 0 0 1 5.954-2.379zm0 3.796c1.217 0 2.391.452 3.294 1.27a.31.31 0 0 0 .433-.006l1.155-1.167a.322.322 0 0 0-.005-.459 7.16 7.16 0 0 0-9.752 0 .322.322 0 0 0-.005.46l1.155 1.166a.31.31 0 0 0 .433.006 4.907 4.907 0 0 1 3.292-1.27zm2.219 2.784a.314.314 0 0 0-.01-.457 3.422 3.422 0 0 0-4.42 0 .314.314 0 0 0-.009.457l1.998 2.016a.312.312 0 0 0 .443 0l1.998-2.016z"/></svg>' +
+      '<svg width="26" height="12" viewBox="0 0 26 12" fill="none"><rect x="1" y="1" width="21" height="10" rx="2.7" stroke="currentColor" stroke-width="1.3" opacity=".45"/><rect x="2.7" y="2.7" width="17.6" height="6.6" rx="1.6" fill="currentColor"/><path d="M24 4.2v3.6a2 2 0 0 0 0-3.6z" fill="currentColor" opacity=".5"/></svg>' +
+      '</span></div>';
+  }
+
+  function donutHtml(c) {
+    const analyzed = c.status === 'analyzed';
+    const p = analyzed ? 0.8 : (c.status === 'unanalyzed' ? 0.56 : 0.72);
+    const color = c.status === 'unanalyzed' ? '#B9D7FF' : '#2F6BFF';
+    const C = 2 * Math.PI * 32;
+    let center;
+    if (analyzed) center = '<b>' + c.winRate + '%</b><span>胜诉率</span>';
+    else if (c.status === 'unanalyzed') center = '<span class="q">?</span><span>胜诉率</span>';
+    else center = '<span class="doing">分析中</span><span>胜诉率</span>';
+    return '<div class="donut">' +
+      '<svg class="arc" viewBox="0 0 70 70"><circle cx="35" cy="35" r="32" fill="none" stroke="#E9F1FF" stroke-width="4"/>' +
+      '<circle cx="35" cy="35" r="32" fill="none" stroke="' + color + '" stroke-width="4" stroke-linecap="round" stroke-dasharray="' + (C * p).toFixed(1) + ' ' + C.toFixed(1) + '"/></svg>' +
+      '<img class="ticks" src="assets/donut.svg" alt="">' +
+      '<div class="donut-center">' + center + '</div>' +
+      '<i class="cap"></i></div>';
+  }
+
+  function caseCardHtml(id, c) {
+    const cls = c.status === 'analyzed' ? 'green' : (c.status === 'unanalyzed' ? 'pink' : 'lav');
+    return '<article class="case-card" data-action="open-detail" data-phone="' + id + '" data-case-id="' + esc(c.id) + '" style="cursor:pointer">' +
+      '<span class="status-pill ' + cls + '">' + esc(c.statusText) + '</span>' +
+      '<h3 class="case-title">' + esc(c.title) + '</h3>' +
+      '<div class="case-row">证据上传：<span class="val ' + (c.evidenceUploaded ? '' : 'red') + '">' + esc(c.evidenceText) + '</span></div>' +
+      '<div class="case-row">当前阶段：<span class="val">' + esc(c.procedure) + '</span></div>' +
+      donutHtml(c) +
+      '</article>';
+  }
+
+  function renderCreatePage(id, pState) {
+    if (pState.view !== 'create') return '';
+    const f = pState.form;
+    const pf = f.pendingFields || {};
+    const step = f.step || 'input';
+    const types = ['民事', '刑事', '行政', '不确定'];
+    const stageOpts = f.caseType ? (STAGE_OPTIONS[f.caseType] || []) : ['尚未起诉/诉前咨询', '已进入诉讼/仲裁', '不确定'];
+    const roles = ROLE_OPTIONS[f.caseType || '不确定'] || ROLE_OPTIONS['不确定'];
+    const identities = ['本人办理', '代理他人'];
+    const readyFiles = f.files.filter(function (item) { return item.status !== 'failed'; });
+    const failedCount = f.files.length - readyFiles.length;
+    const hasTextInput = Boolean(f.summary.trim() || f.claim.trim());
+    const canAiOrganize = readyFiles.length > 0 || hasTextInput;
+    const hasPending = Object.keys(pf).some(function (k) { return pf[k]; });
+
+    const filesHtml = f.files.length
+      ? '<div class="upload-file-list">' + f.files.map(function (file, idx) {
+          const isPdf = /\.pdf$/i.test(file.name);
+          const ext = isPdf ? 'PDF' : (/\.txt$/i.test(file.name) ? 'TXT' : 'DOCX');
+          const failed = file.status === 'failed';
+          return '<div class="upload-file-item ' + (failed ? 'failed' : '') + '">' +
+            '<span class="upload-file-tag ' + (isPdf ? 'pdf' : '') + '">' + ext + '</span>' +
+            '<span class="upload-file-name">' + esc(file.name) + '</span>' +
+            (failed
+              ? '<button class="upload-file-retry" data-action="retry-file" data-phone="' + id + '" data-index="' + idx + '">失败重试</button>'
+              : '<span class="upload-file-size">' + esc(file.sizeText) + '</span>') +
+            '<button class="upload-file-rm" data-action="remove-file" data-phone="' + id + '" data-index="' + idx + '" aria-label="移除">' + icon('close', 'xs') + '</button>' +
+            '</div>';
+        }).join('') + '</div>'
+      : '';
+
+    let bodyHtml = '';
+    let footerHtml = '';
+
+    if (step === 'input') {
+      /* 第1步：小诺极简 AI 建档台（无嵌套套娃，空白页提示词引导 + 微信规范虚线上传卡） */
+      bodyHtml =
+        '<div class="intake-hero">' +
+        '<img src="assets/robot.png" alt="小诺">' +
+        '<div>' +
+        '<div class="intake-hero-title">说说情况，AI 帮你整理建案</div>' +
+        '<div class="intake-hero-sub">用自然语言描述或上传首批材料，一键生成可编辑草稿</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="create-card intake-card">' +
+        '<div class="form-item" style="margin-bottom:0">' +
+        '<div class="form-label">' +
+        '<span>案情描述</span>' +
+        (f.rawSummary
+          ? '<button class="ai-restore-btn" data-action="restore-summary" data-phone="' + id + '">恢复原文</button>'
+          : '<span class="form-sub" data-counter="summary">' + f.summary.length + ' 字</span>') +
+        '</div>' +
+        '<textarea class="form-textarea intake-textarea" data-field="summary" data-phone="' + id + '" placeholder="• 发生了什么纠纷，双方是什么关系？\n• 关键时间节点、金额及当前进展（如尚未起诉）？\n• 希望对方赔偿或解决什么问题？">' + esc(f.summary) + '</textarea>' +
+        '</div>' +
+        '<div class="prompt-chips-wrap">' +
+        '<div class="prompt-chips-label">不知道怎么写？点选常见场景快速填入：</div>' +
+        '<div class="prompt-chips">' +
+        '<button class="prompt-chip" data-action="apply-preset" data-preset="2" data-phone="' + id + '">借条欠款未还</button>' +
+        '<button class="prompt-chip" data-action="apply-preset" data-preset="1" data-phone="' + id + '">物业漏水索赔</button>' +
+        '<button class="prompt-chip" data-action="apply-preset" data-preset="3" data-phone="' + id + '">仅传起诉状材料</button>' +
+        '</div>' +
+        '</div>' +
+        '</div>' +
+        '<div class="create-card upload-card">' +
+        '<label class="upload-dropzone">' +
+        '<span class="drop-icon">' + icon('upload') + '</span>' +
+        '<div>' +
+        '<div class="drop-title">点击上传首批案件材料（选填 · ' + f.files.length + '/5）</div>' +
+        '<div class="drop-sub">支持文字版 PDF / DOCX / TXT（≤20MB），<b>暂不支持扫描件 OCR</b></div>' +
+        '</div>' +
+        '<input type="file" accept=".pdf,.docx,.txt" multiple data-role="file-pick" data-phone="' + id + '" style="display:none">' +
+        '</label>' +
+        filesHtml +
+        '<div class="upload-card-foot">' +
+        '<span>原型态：暂不读取文档正文</span>' +
+        '<button class="rule-toggle-btn" data-action="toggle-rules" data-phone="' + id + '">' + (f.showUploadRules ? '收起说明' : '格式与演示说明') + '</button>' +
+        '</div>' +
+        (f.showUploadRules
+          ? '<div class="upload-rules-drawer reveal-block">' +
+            '<div>单份不超过 20MB，最多上传 5 份；遇到上传失败时可重试或移除，不会丢失已填内容。</div>' +
+            '<div class="upload-rules-actions">' +
+            '<span>测试上传失败态：</span>' +
+            '<button class="upload-sample-btn" data-action="add-sample-doc" data-phone="' + id + '">+ 添加示例/模拟失败</button>' +
+            '</div>' +
+            '</div>'
+          : '') +
+        '</div>';
+
+      footerHtml =
+        '<div class="create-footer">' +
+        '<div class="create-footer-hint">' +
+        (failedCount > 0
+          ? '存在上传失败的文件，请重试或移除后生成草稿'
+          : '输入描述或上传材料即可生成 · 当前原型为规则模拟整理') +
+        '</div>' +
+        '<button class="btn btn-primary btn-block" data-action="ai-organize" data-phone="' + id + '" ' + (canAiOrganize ? '' : 'disabled') + '>' + icon('sparkle') + '<span>生成建案草稿</span></button>' +
+        '</div>';
+    } else {
+      /* 第2步：核对与修改 AI 生成的建档草稿（未识别项标「待确认」且允许跳过后直接创建） */
+      const ourHasVal = f.ourParties.some(function (x) { return x.trim(); });
+      const oppHasVal = f.opponentParties.some(function (x) { return x.trim(); });
+      const partiesPending = Boolean(pf.parties && (!ourHasVal || !oppHasVal));
+
+      const ourRows = f.ourParties.map(function (val, idx) {
+        return '<div class="multi-party-row">' +
+          '<input class="form-input" data-party="our" data-index="' + idx + '" data-phone="' + id + '" placeholder="' + (idx === 0 ? '选填，如：张某 / 某科技有限公司' : '补充其他共同主体') + '" value="' + esc(val) + '">' +
+          (f.ourParties.length > 1
+            ? '<button class="party-rm-btn" data-action="rm-party" data-party="our" data-index="' + idx + '" data-phone="' + id + '" aria-label="删除">' + icon('close', 'xs') + '</button>'
+            : '') +
+          '</div>';
+      }).join('');
+
+      const oppRows = f.opponentParties.map(function (val, idx) {
+        return '<div class="multi-party-row">' +
+          '<input class="form-input" data-party="opponent" data-index="' + idx + '" data-phone="' + id + '" placeholder="' + (idx === 0 ? '选填，如：李某 / 某物业公司' : '补充其他对方主体') + '" value="' + esc(val) + '">' +
+          (f.opponentParties.length > 1
+            ? '<button class="party-rm-btn" data-action="rm-party" data-party="opponent" data-index="' + idx + '" data-phone="' + id + '" aria-label="删除">' + icon('close', 'xs') + '</button>'
+            : '') +
+          '</div>';
+      }).join('');
+
+      const noticeBanner =
+        '<div class="xiaonuo-draft-row">' +
+        '<img src="assets/robot.png" alt="小诺">' +
+        '<div class="xiaonuo-bubble">' +
+        '<div class="xiaonuo-bubble-head">' +
+        '<span class="xiaonuo-bubble-title">小诺已整理建案草稿（原型模拟）</span>' +
+        '<button class="xiaonuo-bubble-back" data-action="goto-input" data-phone="' + id + '">重改描述</button>' +
+        '</div>' +
+        '<div class="xiaonuo-bubble-text">' + (hasPending
+          ? '标橙「待确认」字段可直接补充，也可跳过后直接创建。'
+          : '已识别核心要素，核对或微调任意字段后即可创建案件。') + '</div>' +
+        '</div>' +
+        '</div>';
+
+      const basicCard =
+        '<div class="create-card">' +
+        '<div class="section-title">' +
+        '<div class="section-title-left">AI 生成信息（可修改）</div>' +
+        '<span class="step-badge ' + (hasPending ? 'soft' : 'done') + '">' + (hasPending ? '含待确认项' : '已识别完整') + '</span>' +
+        '</div>' +
+        '<div class="form-item ' + (pf.title ? 'field-pending' : '') + '" ' + (pf.title ? 'data-pending="1"' : '') + '>' +
+        '<div class="form-label"><span>案件名称' + pendingBadgeHtml(pf.title) + '</span><span class="form-sub" data-counter="title">' + f.title.length + '/200</span></div>' +
+        '<input class="form-input" maxlength="200" data-field="title" data-phone="' + id + '" placeholder="未填将记为「未命名案件（待完善）」" value="' + esc(f.title) + '">' +
+        '</div>' +
+        '<div class="form-item ' + (pf.caseType ? 'field-pending' : '') + '" ' + (pf.caseType ? 'data-pending="1"' : '') + '>' +
+        '<div class="form-label"><span>案件类型' + pendingBadgeHtml(pf.caseType) + '</span><span class="form-sub">' + (f.caseType ? '已选：' + esc(f.caseType) : '未选可跳过') + '</span></div>' +
+        '<div class="pill-group">' +
+        types.map(function (t) {
+          return '<button class="opt-pill ' + (f.caseType === t ? 'on' : '') + '" data-action="pick-type" data-phone="' + id + '" data-val="' + t + '">' + t + '</button>';
+        }).join('') +
+        '</div></div>' +
+        '<div class="form-item ' + (pf.stage ? 'field-pending' : '') + '" ' + (pf.stage ? 'data-pending="1"' : '') + ' style="margin-bottom:8px">' +
+        '<div class="form-label"><span>当前办理阶段' + pendingBadgeHtml(pf.stage) + '</span><span class="form-sub">' + (f.stage ? '已选：' + esc(f.stage) : '未选可跳过') + '</span></div>' +
+        '<div class="pill-group">' +
+        stageOpts.map(function (st) {
+          return '<button class="opt-pill ' + (f.stage === st ? 'on' : '') + '" data-action="pick-stage" data-phone="' + id + '" data-val="' + esc(st) + '">' + esc(st) + '</button>';
+        }).join('') +
+        '</div></div>' +
+        '</div>';
+
+      const summaryDraftCard =
+        '<div class="create-card">' +
+        '<div class="section-title">' +
+        '<div class="section-title-left">案情摘要与诉求</div>' +
+        (f.rawSummary ? '<button class="ai-restore-btn" data-action="restore-summary" data-phone="' + id + '">恢复原文</button>' : '') +
+        '</div>' +
+        '<div class="form-item">' +
+        '<div class="form-label"><span>案情摘要（可直接修改）</span></div>' +
+        '<textarea class="form-textarea" style="min-height:74px" data-field="summary" data-phone="' + id + '">' + esc(f.summary) + '</textarea>' +
+        '</div>' +
+        '<div class="form-item ' + (pf.claim ? 'field-pending' : '') + '" ' + (pf.claim ? 'data-pending="1"' : '') + '>' +
+        '<div class="form-label"><span>核心诉求' + pendingBadgeHtml(pf.claim) + '</span><span class="form-sub">可修改或跳过</span></div>' +
+        '<input class="form-input" data-field="claim" data-phone="' + id + '" placeholder="如：追回借款本金及利息 / 履行维修义务" value="' + esc(f.claim) + '">' +
+        '</div>' +
+        (f.files.length
+          ? '<div class="form-item" style="margin-bottom:8px"><div class="form-label"><span>已附材料 (' + readyFiles.length + ' 份)</span><button class="rule-toggle-btn" data-action="goto-input" data-phone="' + id + '">返回修改材料</button></div>' + filesHtml + '</div>'
+          : '') +
+        '</div>';
+
+      const partiesCard =
+        '<div class="create-card">' +
+        '<div class="section-title">' +
+        '<div class="section-title-left">当事人信息' + pendingBadgeHtml(partiesPending) + '</div>' +
+        '<span class="step-badge soft">可修改 · 可跳过</span>' +
+        '</div>' +
+        '<div class="form-item">' +
+        '<div class="form-label"><span>办理身份</span><span class="form-sub">选择后再展示诉讼地位</span></div>' +
+        '<div class="pill-group">' +
+        identities.map(function (idn) {
+          return '<button class="opt-pill ' + (f.handlingIdentity === idn ? 'on' : '') + '" data-action="pick-identity" data-phone="' + id + '" data-val="' + idn + '">' + idn + '</button>';
+        }).join('') +
+        '</div></div>' +
+        (f.handlingIdentity
+          ? '<div class="form-item reveal-block">' +
+            '<div class="form-label"><span>' + (f.handlingIdentity === '代理他人' ? '委托方诉讼地位' : '我方诉讼地位') + '</span></div>' +
+            '<div class="pill-group">' +
+            roles.map(function (r) {
+              return '<button class="opt-pill ' + (f.partyRole === r ? 'on' : '') + '" data-action="pick-role" data-phone="' + id + '" data-val="' + esc(r) + '">' + esc(r) + '</button>';
+            }).join('') +
+            '</div></div>'
+          : '') +
+        '<div class="form-item ' + (pf.parties && !ourHasVal ? 'field-pending' : '') + '" ' + (pf.parties && !ourHasVal ? 'data-pending="1"' : '') + '>' +
+        '<div class="form-label"><span>我方 / 委托方名称' + pendingBadgeHtml(pf.parties && !ourHasVal) + '</span><span class="form-sub">可跳过</span></div>' +
+        '<div class="multi-party-list">' + ourRows + '</div>' +
+        '<button class="add-party-btn" data-action="add-party" data-party="our" data-phone="' + id + '">' + icon('plus') + '<span>添加我方主体</span></button>' +
+        '</div>' +
+        '<div class="form-item ' + (pf.parties && !oppHasVal ? 'field-pending' : '') + '" ' + (pf.parties && !oppHasVal ? 'data-pending="1"' : '') + ' style="margin-bottom:8px">' +
+        '<div class="form-label"><span>对方当事人名称' + pendingBadgeHtml(pf.parties && !oppHasVal) + '</span><span class="form-sub">可跳过</span></div>' +
+        '<div class="multi-party-list">' + oppRows + '</div>' +
+        '<button class="add-party-btn" data-action="add-party" data-party="opponent" data-phone="' + id + '">' + icon('plus') + '<span>添加对方主体</span></button>' +
+        '</div>' +
+        '</div>';
+
+      bodyHtml = noticeBanner + basicCard + summaryDraftCard + partiesCard;
+
+      const willAnalyze = readyFiles.length > 0 || hasTextInput;
+      const submitText = willAnalyze ? '创建案件并开始分析' : '创建案件';
+      const hintText = failedCount > 0
+        ? '存在失败文件，请返回第1步重试或移除后再创建'
+        : (readyFiles.length > 0
+          ? '建案后将解析 ' + readyFiles.length + ' 份材料并分析案情（原型态）'
+          : (hasTextInput ? '建案后将分析案情（纯文本，非材料解析）' : '将创建空白档案，进入详情后可随时补充'));
+
+      footerHtml =
+        '<div class="create-footer">' +
+        '<div class="create-footer-hint">' + esc(hintText) + '</div>' +
+        '<div class="step-footer-row">' +
+        '<button class="btn-soft-back" data-action="goto-input" data-phone="' + id + '">修改描述</button>' +
+        '<button class="btn btn-primary" data-action="submit-case" data-phone="' + id + '">' + submitText + '</button>' +
+        '</div>' +
+        '</div>';
+    }
+
+    return '<section class="create-page">' +
+      '<header class="nav on-gradient">' +
+      '<div class="nav-side"><button class="nav-back" data-action="close-modal" data-phone="' + id + '" aria-label="返回首页（保留草稿）">' + icon('back') + '</button></div>' +
+      '<div class="nav-title">新建案件</div>' +
+      '<div class="nav-side right" style="width:auto"><div class="create-nav-actions">' +
+      (hasDraft(f) ? '<button class="create-nav-clear" data-action="clear-draft" data-phone="' + id + '">清空</button>' : '') +
+      '</div></div>' +
+      '</header>' +
+      '<div class="create-scroll">' + bodyHtml + '</div>' +
+      footerHtml +
+      '</section>';
+  }
+
+  function renderDetailPage(id, pState) {
+    if (pState.view !== 'detail') return '';
+    const c = pState.cases.find(function (item) { return item.id === pState.activeCaseId; }) || pState.cases[0];
+    if (!c) return '';
+
+    const floatBadge = c.status === 'analyzed'
+      ? '<span class="status-float">已分析</span>'
+      : (c.status === 'analyzing'
+        ? '<span class="status-float" style="background:#8FA8FF">分析中</span>'
+        : '<span class="status-float" style="background:#F6AFAF">未分析</span>');
+
+    const detailPickerInput = '<input type="file" accept=".pdf,.docx,.txt" multiple data-role="detail-file-pick" data-phone="' + id + '" style="display:none">';
+
+    const cards = [
+      { icon: 'clipboard', title: 'AI证据链分析', sub: '一键查看证据链分析结果', msg: 'AI证据链分析：原型占位，需接入后端文档解析后查看' },
+      { icon: 'filetext', title: 'AI案情梳理', sub: 'AI智能分析梳理案情脉络结果', msg: c.summary ? ('AI案情梳理（原型占位）：已记录案情摘要，需接入后端分析后生成完整时间线') : 'AI案情梳理：原型占位，需接入后端分析流程' },
+      { icon: 'folder', title: '案件文档归类', sub: 'AI智能分类案件文档管理', picker: true },
+      { icon: 'chart', title: '证据分析', sub: 'AI分析原告与被告争议焦点', msg: '证据分析：原型占位，需接入后端分析后查看争议焦点' }
+    ];
+
+    const cardsHtml = cards.map(function (x) {
+      if (x.picker) {
+        return '<label class="detail-card" style="cursor:pointer">' +
+          '<span class="d-icon">' + icon(x.icon) + '</span><span class="chev">' + icon('right') + '</span>' +
+          '<h4>' + x.title + '</h4><p>' + x.sub + '</p>' +
+          detailPickerInput +
+          '</label>';
+      }
+      return '<button class="detail-card" data-action="toast" data-phone="' + id + '" data-msg="' + esc(x.msg) + '">' +
+        '<span class="d-icon">' + icon(x.icon) + '</span><span class="chev">' + icon('right') + '</span>' +
+        '<h4>' + x.title + '</h4><p>' + x.sub + '</p></button>';
+    }).join('');
+
+    const repliesHtml = pState.detailReplies.length
+      ? '<div class="detail-chat-replies">' +
+        '<div style="font-size:11px;color:#7b869c;margin:0 0 6px">模拟咨询记录（当前未连接后端 AI / SSE）</div>' +
+        pState.detailReplies.map(function (item) {
+          return '<div class="detail-chat-reply">' +
+            '<div style="margin-bottom:4px"><strong>我：</strong>' + esc(item.q) + '</div>' +
+            '<div><strong>小诺（模拟）：</strong>' + esc(item.a) + '</div>' +
+            '</div>';
+        }).join('') +
+        '</div>'
+      : '';
+
+    return '<section class="page detail-page" style="pointer-events:auto">' +
+      '<header class="nav">' +
+      '<div class="nav-side"><button class="nav-back" data-action="detail-back" data-phone="' + id + '" aria-label="返回">' + icon('back') + '</button></div>' +
+      '<div class="nav-title">查看案件</div>' +
+      '<div class="nav-side right"></div>' +
+      '</header>' +
+      '<div class="page-scroll"><div class="detail-sheet">' +
+      '<h3 class="detail-case-title">' + esc(c.title) + '</h3>' +
+      '<div class="detail-donut-wrap">' + donutHtml(c).replace('class="donut"', 'class="donut lg"') + floatBadge + '</div>' +
+      '<div class="detail-meta"><div>证据上传：<b>' + esc(c.evidenceText) + '</b></div><div>案件程序：<b>' + esc(c.procedure) + '</b></div></div>' +
+      '<div class="detail-section-title">查看案件分析结果</div>' +
+      '<div class="detail-grid">' + cardsHtml + '</div>' +
+      repliesHtml +
+      '</div></div>' +
+      '<button class="return-case" style="bottom:210px" data-action="detail-back" data-phone="' + id + '">返回<br>案件</button>' +
+      '<div class="composer-wrap">' +
+      '<div class="composer">' +
+      '<label class="plus" style="cursor:pointer" aria-label="上传材料">' + icon('plus') + detailPickerInput + '</label>' +
+      '<div class="composer-box ' + (pState.detailDraft.trim() ? 'has-text' : '') + '">' +
+      '<input type="text" data-role="detail-input" data-phone="' + id + '" placeholder="关于案件，有什么想要咨询的？" value="' + esc(pState.detailDraft) + '">' +
+      '<button class="mic" data-action="toast" data-phone="' + id + '" data-msg="语音输入功能在小程序端可用" aria-label="语音">' + icon('mic') + '</button>' +
+      '<button class="send active" data-action="detail-send" data-phone="' + id + '" aria-label="发送">' + icon('send') + '</button>' +
+      '</div></div></div>' +
+      '</section>';
+  }
+
+  function renderPhone(id, opts) {
+    const pState = state.phones[id];
+    const kw = pState.search.trim().toLowerCase();
+    const list = state.emptyMode
+      ? []
+      : pState.cases.filter(function (c) { return !kw || c.title.toLowerCase().indexOf(kw) > -1; });
+    const draftDot = hasDraft(pState.form) ? '<span class="draft-dot" title="有未提交草稿"></span>' : '';
+
+    let searchBlock = '';
+    if (id === 2) {
+      searchBlock =
+        '<div class="search-with-add">' +
+        '<div class="search-box on-white">' + icon('search') +
+        '<input data-role="search" data-phone="2" type="text" placeholder="搜索案件名称" value="' + esc(pState.search) + '">' +
+        '<button class="search-btn" data-action="search" data-phone="2">搜索</button>' +
+        '</div>' +
+        '<button class="search-add-btn" data-action="open-create" data-phone="2">' + icon('plus') + '<span>新建' + draftDot + '</span></button>' +
+        '</div>';
+    } else {
+      searchBlock =
+        '<div class="home-search">' +
+        '<div class="search-box on-white">' + icon('search') +
+        '<input data-role="search" data-phone="' + id + '" type="text" placeholder="请输入搜索内容" value="' + esc(pState.search) + '">' +
+        '<button class="search-btn" data-action="search" data-phone="' + id + '">搜索</button>' +
+        '</div></div>';
+    }
+
+    let sectionHeader = '';
+    if (id === 1) {
+      sectionHeader =
+        '<div class="case-section-bar">' +
+        '<div class="case-section-left"><span>我的案件</span><span class="case-count">(' + list.length + ')</span></div>' +
+        '<button class="add-case-pill" data-action="open-create" data-phone="1">' + icon('plus') + '<span>新建案件' + draftDot + '</span></button>' +
+        '</div>';
+    }
+
+    const listHtml = list.length
+      ? '<div class="case-list">' + list.map(function (c) { return caseCardHtml(id, c); }).join('') + '</div>'
+      : '<div class="empty-enhanced">' + icon('folder') +
+        '<div>' + (kw ? '没有找到与“' + esc(pState.search) + '”相关的案件' : '暂无案件记录，先创建一个案件吧') + '</div>' +
+        '<button class="empty-cta" data-action="open-create" data-phone="' + id + '">' + icon('plus') + '<span>新建案件' + draftDot + '</span></button>' +
+        '</div>';
+
+    const fabHtml = id === 3
+      ? '<button class="case-fab" data-action="open-create" data-phone="3" aria-label="新建案件">' + icon('plus') + '<span>新建' + draftDot + '</span></button>'
+      : '';
+
+    const overlayHtml = pState.view === 'create'
+      ? renderCreatePage(id, pState)
+      : (pState.view === 'detail' ? renderDetailPage(id, pState) : '');
+
+    const html =
+      statusbarHtml() +
+      '<div class="phone-inner">' +
+      '<section class="page home-page bg-gradient">' +
+      '<header class="topbar">' +
+      '<button class="menu-btn" data-action="toast" data-phone="' + id + '" data-msg="原型演示：菜单栏">' + icon('menu') + '</button>' +
+      '<div class="tabs">' +
+      '<button class="tab active">案件</button>' +
+      '<button class="tab" data-action="toast" data-phone="' + id + '" data-msg="当前仅对比案件首页入口">助手</button>' +
+      '</div>' +
+      '<button class="avatar-btn" data-action="toast" data-phone="' + id + '" data-msg="原型演示：个人中心"><img src="assets/avatar.jpg" alt="头像"></button>' +
+      '</header>' +
+      '<div class="page-scroll home-scroll">' +
+      '<div class="hero">' +
+      '<img class="robot" src="assets/robot.png" alt="小诺">' +
+      '<div class="hero-text">' +
+      '<h2 class="hero-title">Hi～我是小诺！</h2>' +
+      '<div class="hero-sub">下午好！我是您的案件智能小助手，您可以基于案件咨询你要问询的问题</div>' +
+      '</div></div>' +
+      searchBlock +
+      sectionHeader +
+      listHtml +
+      '</div>' +
+      fabHtml +
+      '<div class="composer-wrap">' +
+      '<div class="composer">' +
+      '<button class="plus" data-action="toast" data-phone="' + id + '" data-msg="底部 + 为聊天附件扩展栏（拍照/相册/文档/通话）">' + icon('plus') + '</button>' +
+      '<div class="composer-box">' +
+      '<input type="text" placeholder="关于案件，有什么想要咨询的？" readonly data-action="toast" data-phone="' + id + '" data-msg="底部用于案件 AI 问答">' +
+      '<button class="mic">' + icon('mic') + '</button>' +
+      '</div></div></div>' +
+      '</section>' +
+      '</div>' +
+      '<div class="home-indicator"><span></span></div>' +
+      '<div class="phone-overlay">' + overlayHtml + '</div>';
+
+    const host = document.getElementById('phone-' + id);
+    const prevBody = host.querySelector('.create-scroll');
+    const prevScroll = prevBody ? prevBody.scrollTop : 0;
+    host.classList.toggle('highlight-outline', state.highlight);
+    host.innerHTML = html;
+    if (prevScroll && !(opts && opts.skipRestoreScroll)) {
+      const nextBody = host.querySelector('.create-scroll');
+      if (nextBody) nextBody.scrollTop = prevScroll;
+    }
+  }
+
+  function renderAll() {
+    [1, 2, 3].forEach(function (id) { renderPhone(id); });
+  }
+
+  function showToast(id, msg) {
+    const host = document.getElementById('phone-' + id);
+    const old = host.querySelector('.toast');
+    if (old) old.remove();
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(function () { if (el.parentNode) el.remove(); }, 2000);
+  }
+
+  function focusFirstPending(pid) {
+    const scrollEl = document.querySelector('#phone-' + pid + ' .create-scroll');
+    if (!scrollEl) return;
+    const target = scrollEl.querySelector('[data-pending="1"]');
+    if (!target) return;
+    target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const focusable = target.querySelector('input, textarea');
+    if (focusable) {
+      setTimeout(function () { focusable.focus({ preventScroll: true }); }, 220);
+    }
+  }
+
+  function appendValidatedFiles(pid, targetList, rawFiles) {
+    Array.prototype.forEach.call(rawFiles, function (file) {
+      if (targetList.length >= 10) {
+        showToast(pid, '当前列表最多保留 10 个文件');
+        return;
+      }
+      if (!/\.(pdf|docx|txt)$/i.test(file.name)) {
+        showToast(pid, file.name + ' 仅支持 PDF / DOCX / TXT');
+        return;
+      }
+      if (file.size > 20 * 1024 * 1024) {
+        showToast(pid, file.name + ' 超过 20MB 限制');
+        return;
+      }
+      targetList.push({ name: file.name, sizeText: formatSize(file.size), status: 'ready' });
+    });
+  }
+
+  function handleDetailSend(pid) {
+    const pState = state.phones[pid];
+    const q = pState.detailDraft.trim();
+    if (!q) {
+      showToast(pid, '请输入您想模拟咨询的问题');
+      return;
+    }
+    const c = pState.cases.find(function (item) { return item.id === pState.activeCaseId; });
+    const title = c ? c.title : '当前案件';
+    const docCnt = c ? ((c.files && c.files.length) || c.fileCount || 0) : 0;
+    const replyText =
+      '当前为原型模拟回复（未接入真实 AI/SSE）。已记录您围绕「' + title + '」（' +
+      (c && c.caseType ? c.caseType + ' · ' : '') + (c ? c.procedure : '待确认') +
+      '，本地已选材料 ' + docCnt + ' 份）的提问；正式环境将结合已上传文档检索与法条匹配给出分析建议。';
+    pState.detailReplies.push({ q: q, a: replyText });
+    pState.detailDraft = '';
+    renderPhone(pid);
+    const dScroll = document.querySelector('#phone-' + pid + ' .page-scroll');
+    if (dScroll) dScroll.scrollTop = dScroll.scrollHeight;
+  }
+
+  document.addEventListener('click', function (e) {
+    const viewBtn = e.target.closest('[data-view]');
+    if (viewBtn) {
+      const v = viewBtn.dataset.view;
+      document.querySelectorAll('[data-view]').forEach(function (b) { b.classList.remove('on'); });
+      viewBtn.classList.add('on');
+      const grid = document.getElementById('grid');
+      grid.classList.toggle('single', v !== 'all');
+      document.querySelectorAll('[data-col]').forEach(function (col) {
+        col.classList.toggle('hidden', v !== 'all' && col.dataset.col !== v);
+      });
+      return;
+    }
+
+    if (e.target.id === 'toggle-highlight') {
+      state.highlight = !state.highlight;
+      e.target.classList.toggle('on', state.highlight);
+      renderAll();
+      return;
+    }
+
+    if (e.target.id === 'toggle-empty') {
+      state.emptyMode = !state.emptyMode;
+      e.target.classList.toggle('on', state.emptyMode);
+      renderAll();
+      return;
+    }
+
+    if (e.target.id === 'reset-demo') {
+      state.emptyMode = false;
+      document.getElementById('toggle-empty').classList.remove('on');
+      [1, 2, 3].forEach(function (id) {
+        state.phones[id] = { cases: cloneCases(), search: '', view: 'list', activeCaseId: null, detailDraft: '', detailReplies: [], form: defaultForm() };
+      });
+      renderAll();
+      return;
+    }
+
+    const actEl = e.target.closest('[data-action]');
+    if (!actEl) return;
+
+    const action = actEl.dataset.action;
+    const pid = Number(actEl.dataset.phone);
+    const pState = state.phones[pid];
+
+    if (action === 'toast') {
+      showToast(pid, actEl.dataset.msg || '');
+    } else if (action === 'open-create') {
+      const resumed = hasDraft(pState.form);
+      pState.view = 'create';
+      renderPhone(pid);
+      if (resumed) showToast(pid, '已恢复上次未提交草稿');
+    } else if (action === 'close-modal') {
+      const kept = hasDraft(pState.form);
+      pState.view = 'list';
+      renderPhone(pid);
+      if (kept) showToast(pid, '草稿已保留，下次点击新建可继续编辑');
+    } else if (action === 'clear-draft') {
+      pState.form = defaultForm();
+      renderPhone(pid, { skipRestoreScroll: true });
+      showToast(pid, '已清空当前草稿');
+    } else if (action === 'apply-preset') {
+      const nextIdx = Number(actEl.dataset.preset || 1);
+      pState.form = defaultForm();
+      if (nextIdx === 1) {
+        pState.form.summary = '2025年3月起小区地下车库长期漏水导致我方张某车辆受损，多次向安徽某物业服务有限公司书面报修未果，目前尚未起诉，希望物业公司履行维修义务并赔偿损失1.2万元。';
+        pState.form.files = [{ name: '报修沟通记录.docx', sizeText: '186 KB', status: 'ready' }];
+        showToast(pid, '已填入物业漏水示例，点击「生成建案草稿」查看提取结果');
+      } else if (nextIdx === 2) {
+        pState.form.summary = '我在2024年借给李某五万元，一直没还，有借条，希望追回本金和利息。';
+        showToast(pid, '已填入借贷纠纷示例（含待确认项演示）');
+      } else {
+        pState.form.files = [{ name: '民事起诉状.docx', sizeText: '186 KB', status: 'ready' }];
+        showToast(pid, '已附示例起诉状：原型不读取正文，可测试待确认流程');
+      }
+      renderPhone(pid, { skipRestoreScroll: true });
+    } else if (action === 'goto-input') {
+      pState.form.step = 'input';
+      renderPhone(pid, { skipRestoreScroll: true });
+    } else if (action === 'goto-draft') {
+      if (!pState.form.aiOrganized) {
+        showToast(pid, '请先点击生成建档草稿');
+        return;
+      }
+      pState.form.step = 'draft';
+      renderPhone(pid, { skipRestoreScroll: true });
+    } else if (action === 'ai-organize') {
+      const readyFiles = pState.form.files.filter(function (x) { return x.status !== 'failed'; });
+      const failedCnt = pState.form.files.length - readyFiles.length;
+      if (failedCnt > 0) {
+        showToast(pid, '存在上传失败的文件，请重试或移除后再生成草稿');
+        return;
+      }
+      if (!readyFiles.length && !pState.form.summary.trim() && !pState.form.claim.trim()) {
+        showToast(pid, '请先输入案情描述或上传材料');
+        return;
+      }
+      const pending = analyzeWithAi(pState.form);
+      renderPhone(pid, { skipRestoreScroll: true });
+      const pendingKeys = Object.keys(pending).filter(function (k) { return pending[k]; });
+      if (pendingKeys.length) {
+        setTimeout(function () { focusFirstPending(pid); }, 40);
+        showToast(pid, '草稿已生成，标「待确认」字段可修改或跳过创建');
+      } else {
+        showToast(pid, 'AI 草稿已生成，请核对修改后创建案件');
+      }
+    } else if (action === 'restore-summary') {
+      if (pState.form.rawSummary) {
+        pState.form.summary = pState.form.rawSummary;
+        pState.form.rawSummary = '';
+        renderPhone(pid);
+        showToast(pid, '已恢复为整理前的案情描述');
+      }
+    } else if (action === 'toggle-claim') {
+      pState.form.showClaim = !pState.form.showClaim;
+      renderPhone(pid);
+    } else if (action === 'pick-type') {
+      const nextType = actEl.dataset.val;
+      if (pState.form.caseType !== nextType) {
+        pState.form.caseType = nextType;
+        const validStages = STAGE_OPTIONS[nextType] || [];
+        if (validStages.indexOf(pState.form.stage) === -1) pState.form.stage = '';
+        const validRoles = ROLE_OPTIONS[nextType] || [];
+        if (validRoles.indexOf(pState.form.partyRole) === -1) pState.form.partyRole = '';
+      }
+      delete pState.form.pendingFields.caseType;
+      renderPhone(pid);
+    } else if (action === 'pick-stage') {
+      pState.form.stage = actEl.dataset.val;
+      delete pState.form.pendingFields.stage;
+      renderPhone(pid);
+    } else if (action === 'toggle-rules') {
+      pState.form.showUploadRules = !pState.form.showUploadRules;
+      renderPhone(pid);
+    } else if (action === 'pick-identity') {
+      pState.form.handlingIdentity = actEl.dataset.val;
+      renderPhone(pid);
+    } else if (action === 'pick-role') {
+      pState.form.partyRole = actEl.dataset.val;
+      renderPhone(pid);
+    } else if (action === 'toggle-party-names') {
+      pState.form.showPartyNames = !pState.form.showPartyNames;
+      renderPhone(pid);
+    } else if (action === 'toggle-more') {
+      pState.form.showParties = !pState.form.showParties;
+      renderPhone(pid);
+    } else if (action === 'add-party') {
+      const list = actEl.dataset.party === 'our' ? pState.form.ourParties : pState.form.opponentParties;
+      if (list.length >= 5) {
+        showToast(pid, '最多添加 5 个主体');
+        return;
+      }
+      list.push('');
+      renderPhone(pid);
+    } else if (action === 'rm-party') {
+      const list = actEl.dataset.party === 'our' ? pState.form.ourParties : pState.form.opponentParties;
+      list.splice(Number(actEl.dataset.index), 1);
+      renderPhone(pid);
+    } else if (action === 'add-sample-doc') {
+      if (pState.form.files.length >= 5) {
+        showToast(pid, '首批材料最多上传 5 个文件');
+        return;
+      }
+      const samples = [
+        { name: '民事起诉状.docx', sizeText: '186 KB', status: 'ready' },
+        { name: '房屋买卖合同.pdf', sizeText: '1.4 MB', status: 'failed' },
+        { name: '微信沟通记录整理.txt', sizeText: '42 KB', status: 'ready' }
+      ];
+      const next = Object.assign({}, samples[pState.form.files.length % samples.length]);
+      pState.form.files.push(next);
+      renderPhone(pid);
+      if (next.status === 'failed') showToast(pid, '模拟上传失败：已保留草稿，可重试或移除');
+    } else if (action === 'retry-file') {
+      const fItem = pState.form.files[Number(actEl.dataset.index)];
+      if (fItem) fItem.status = 'ready';
+      renderPhone(pid);
+      showToast(pid, '重新上传成功');
+    } else if (action === 'remove-file') {
+      pState.form.files.splice(Number(actEl.dataset.index), 1);
+      renderPhone(pid);
+    } else if (action === 'submit-case') {
+      const failedCount = pState.form.files.filter(function (f) { return f.status === 'failed'; }).length;
+      if (failedCount > 0) {
+        showToast(pid, '存在上传失败的文件，草稿已保留，请重试或移除后创建');
+        return;
+      }
+      const finalTitle = pState.form.title.trim() || '未命名案件（待完善）';
+      const finalType = pState.form.caseType || '待确认';
+      const finalStage = pState.form.stage || '待确认';
+      const readyCount = pState.form.files.length;
+      const hasText = Boolean(pState.form.summary.trim() || pState.form.claim.trim());
+      const analysisMode = readyCount > 0 ? 'with_docs' : (hasText ? 'pure_text' : 'empty');
+      const willAnalyze = analysisMode !== 'empty';
+      const newCase = {
+        id: 'new-' + Date.now(),
+        title: finalTitle,
+        status: willAnalyze ? 'analyzing' : 'unanalyzed',
+        statusText: willAnalyze ? '分析中' : '未分析',
+        analysisMode: analysisMode,
+        fileCount: readyCount,
+        files: pState.form.files.map(function (f) { return Object.assign({}, f); }),
+        evidenceUploaded: readyCount > 0,
+        evidenceText: readyCount > 0 ? '已选 ' + readyCount + ' 份(原型)' : '未上传',
+        procedure: finalStage,
+        caseType: finalType,
+        summary: pState.form.summary.trim(),
+        claim: pState.form.claim.trim(),
+        handlingIdentity: pState.form.handlingIdentity,
+        partyRole: pState.form.partyRole,
+        ourParties: pState.form.ourParties.filter(function (x) { return x.trim(); }),
+        opponentParties: pState.form.opponentParties.filter(function (x) { return x.trim(); }),
+        winRate: null
+      };
+      state.emptyMode = false;
+      document.getElementById('toggle-empty').classList.remove('on');
+      pState.cases.unshift(newCase);
+      pState.search = '';
+      pState.form = defaultForm();
+      pState.activeCaseId = newCase.id;
+      pState.detailReplies = [];
+      pState.detailDraft = '';
+      pState.view = 'detail';
+      renderPhone(pid, { skipRestoreScroll: true });
+      showToast(
+        pid,
+        analysisMode === 'with_docs'
+          ? '已进入新案件详情（原型态：待接入材料解析）'
+          : (analysisMode === 'pure_text'
+            ? '已进入新案件详情（原型态：待接入案情分析）'
+            : '案件已创建（未分析），可在详情页选文件补充')
+      );
+    } else if (action === 'open-detail') {
+      pState.activeCaseId = actEl.dataset.caseId;
+      pState.detailReplies = [];
+      pState.detailDraft = '';
+      pState.view = 'detail';
+      renderPhone(pid, { skipRestoreScroll: true });
+    } else if (action === 'detail-back') {
+      pState.view = 'list';
+      renderPhone(pid);
+    } else if (action === 'detail-send') {
+      handleDetailSend(pid);
+    } else if (action === 'search') {
+      renderPhone(pid);
+    }
+  });
+
+  document.addEventListener('change', function (e) {
+    const t = e.target;
+    if (t.dataset.role === 'file-pick' && t.files && t.files.length) {
+      const pid = Number(t.dataset.phone);
+      const pState = state.phones[pid];
+      if (pState.form.files.length >= 5) {
+        showToast(pid, '首批材料最多上传 5 个文件');
+        return;
+      }
+      appendValidatedFiles(pid, pState.form.files, Array.prototype.slice.call(t.files, 0, 5 - pState.form.files.length));
+      renderPhone(pid);
+    } else if (t.dataset.role === 'detail-file-pick' && t.files && t.files.length) {
+      const pid = Number(t.dataset.phone);
+      const pState = state.phones[pid];
+      const c = pState.cases.find(function (item) { return item.id === pState.activeCaseId; });
+      if (c) {
+        c.files = c.files || [];
+        const before = c.files.length;
+        appendValidatedFiles(pid, c.files, t.files);
+        if (c.files.length > before) {
+          c.fileCount = c.files.length;
+          c.evidenceUploaded = true;
+          c.evidenceText = '已选 ' + c.fileCount + ' 份(原型)';
+          if (c.status !== 'analyzed') {
+            c.status = 'analyzing';
+            c.statusText = '分析中';
+            c.analysisMode = 'with_docs';
+          }
+          renderPhone(pid);
+          showToast(pid, '已选择 ' + (c.files.length - before) + ' 份本地文件（原型暂未上传服务端）');
+        }
+      }
+    }
+  });
+
+  document.addEventListener('input', function (e) {
+    const t = e.target;
+    if (t.dataset.role === 'search') {
+      const pid = Number(t.dataset.phone);
+      state.phones[pid].search = t.value;
+    } else if (t.dataset.role === 'detail-input') {
+      const pid = Number(t.dataset.phone);
+      state.phones[pid].detailDraft = t.value;
+      const box = t.closest('.composer-box');
+      if (box) box.classList.toggle('has-text', Boolean(t.value.trim()));
+    } else if (t.dataset.party) {
+      const pid = Number(t.dataset.phone);
+      const idx = Number(t.dataset.index);
+      const form = state.phones[pid].form;
+      const list = t.dataset.party === 'our' ? form.ourParties : form.opponentParties;
+      list[idx] = t.value;
+      if (form.pendingFields && form.pendingFields.parties) {
+        const ourOk = form.ourParties.some(function (x) { return x.trim(); });
+        const oppOk = form.opponentParties.some(function (x) { return x.trim(); });
+        if (ourOk && oppOk) delete form.pendingFields.parties;
+      }
+    } else if (t.dataset.field) {
+      const pid = Number(t.dataset.phone);
+      const field = t.dataset.field;
+      const form = state.phones[pid].form;
+      const hadText = Boolean(form.summary.trim() || form.claim.trim());
+      form[field] = t.value;
+      if (form.pendingFields && form.pendingFields[field] && t.value.trim()) {
+        delete form.pendingFields[field];
+        const pendingWrap = t.closest('.field-pending');
+        if (pendingWrap) {
+          pendingWrap.classList.remove('field-pending');
+          pendingWrap.removeAttribute('data-pending');
+          const b = pendingWrap.querySelector('.pending-badge');
+          if (b) b.remove();
+        }
+      }
+      if (field === 'title') {
+        const counter = document.querySelector('#phone-' + pid + ' [data-counter="title"]');
+        if (counter) counter.textContent = t.value.length + '/200';
+      } else if (field === 'summary' || field === 'claim') {
+        if (field === 'summary') {
+          const sCounter = document.querySelector('#phone-' + pid + ' [data-counter="summary"]');
+          if (sCounter) sCounter.textContent = t.value.length + ' 字';
+        }
+        const hasTextNow = Boolean(form.summary.trim() || form.claim.trim());
+        const readyCnt = form.files.filter(function (x) { return x.status !== 'failed'; }).length;
+        const aiBtn = document.querySelector('#phone-' + pid + ' [data-action="ai-organize"]');
+        if (aiBtn) aiBtn.disabled = !(hasTextNow || readyCnt > 0);
+        if (hadText !== hasTextNow) {
+          const submitBtn = document.querySelector('#phone-' + pid + ' [data-action="submit-case"]');
+          if (submitBtn) submitBtn.textContent = (readyCnt > 0 || hasTextNow) ? '创建案件并开始分析' : '创建案件';
+          const hintEl = document.querySelector('#phone-' + pid + ' .create-footer-hint');
+          if (hintEl && form.step === 'draft' && readyCnt === 0) {
+            hintEl.textContent = hasTextNow
+              ? '建案后将分析案情（纯文本，非材料解析）'
+              : '将创建空白档案，进入详情后可随时补充';
+          }
+        }
+      }
+    }
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && e.target.dataset.role === 'search') {
+      renderPhone(Number(e.target.dataset.phone));
+    } else if (e.key === 'Enter' && e.target.dataset.role === 'detail-input') {
+      handleDetailSend(Number(e.target.dataset.phone));
+    }
+  });
+
+  renderAll();
+})();
+</script>
+</body>
+</html>

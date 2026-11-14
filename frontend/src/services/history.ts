@@ -44,24 +44,26 @@ function mapConversation(row: BackendConversationRow): ConversationSummary {
   };
 }
 
-export async function fetchConversations(
+export interface HistoryPage<T> {
+  items: T[];
+  next_cursor: number | null;
+}
+
+export async function fetchConversationsPage(
   keyword = "",
-): Promise<ConversationSummary[]> {
+  beforeId?: number,
+): Promise<HistoryPage<ConversationSummary>> {
   if (USE_MOCK) {
-    return new Promise((resolve) => {
-      setTimeout(
-        () => resolve(mockConversations.map((item) => ({ ...item }))),
-        120,
-      );
-    });
+    return {
+      items: mockConversations.filter((item) => item.title.includes(keyword))
+        .map((item) => ({ ...item })),
+      next_cursor: null,
+    };
   }
-  const res = await request<{
-    items: BackendConversationRow[];
-    next_cursor: number | null;
-  }>("/conversations", {
-    query: { keyword, limit: 50 },
+  const res = await request<HistoryPage<BackendConversationRow>>("/conversations", {
+    query: { keyword, limit: 50, before_id: beforeId },
   });
-  return res.items.map(mapConversation);
+  return { items: res.items.map(mapConversation), next_cursor: res.next_cursor };
 }
 
 export async function createConversation(payload: {
@@ -99,16 +101,17 @@ export async function deleteConversations(ids: number[]): Promise<void> {
   });
 }
 
-export async function fetchConversationMessages(
+export async function fetchConversationMessagesPage(
   conversationId: number,
-): Promise<ConversationMessageRecord[]> {
+  beforeSeq?: number,
+): Promise<HistoryPage<ConversationMessageRecord>> {
   const res = await request<{
     items: ConversationMessageRecord[];
     next_cursor: number | null;
   }>(`/conversations/${conversationId}/messages`, {
-    query: { limit: 100 },
+    query: { limit: 100, before_seq: beforeSeq },
   });
-  return res.items;
+  return res;
 }
 
 export function cancelConversationMessage(

@@ -46,6 +46,7 @@ interface BackendDocumentRow {
   category: DocumentCategoryCode;
   original_name?: string;
   mime_type?: string;
+  parse_status?: string;
   created_at: string;
   uploaded_by: number;
 }
@@ -99,6 +100,7 @@ function mapDocument(row: BackendDocumentRow): CaseDocument {
     name: row.title || name,
     type: fileExt(name, row.mime_type),
     mime_type: row.mime_type,
+    parse_status: row.parse_status,
     uploader: `成员 #${row.uploaded_by}`,
     uploaded_at: formatTime(row.created_at),
     category: DOCUMENT_CATEGORY_LABELS[row.category] || "其他",

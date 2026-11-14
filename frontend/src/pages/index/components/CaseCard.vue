@@ -19,11 +19,15 @@ const emit = defineEmits<{
 }>();
 
 const status = computed(() => ANALYSIS_STATUS_META[props.item.analysis_status]);
-const evidence = computed(
-  () => EVIDENCE_STATUS_META[props.item.evidence_upload_status],
-);
+const evidence = computed(() => {
+  const base = EVIDENCE_STATUS_META[props.item.evidence_upload_status];
+  if (props.item.evidence_label) {
+    return { ...base, label: props.item.evidence_label };
+  }
+  return base;
+});
 const procedure = computed(
-  () => PROCEDURE_LABELS[props.item.procedure] ?? "其他",
+  () => props.item.procedure_label || PROCEDURE_LABELS[props.item.procedure] || "其他",
 );
 </script>
 

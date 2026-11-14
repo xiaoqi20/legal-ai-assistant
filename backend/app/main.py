@@ -32,7 +32,7 @@ def create_app(settings: Settings | None = None):
       await app.state.db.connect()
       async with app.state.db.engine.connect() as conn:
         version = (await conn.execute(text("SELECT version_num FROM public.alembic_version"))).scalar_one()
-        if version != "0004":
+        if version != "0006":
           raise RuntimeError("数据库迁移版本不匹配，请运行 alembic upgrade head")
       yield
     finally:
@@ -85,7 +85,9 @@ def create_app(settings: Settings | None = None):
     async with request.app.state.db.engine.connect() as conn:
       await conn.execute(text("SELECT 1"))
     return {"status": "ok", "database": "postgresql", "ai_configured": bool(settings.deepseek_api_key.get_secret_value()),
-      "embedding_configured": bool(settings.embedding_api_key.get_secret_value())}
+    "embedding_configured": bool(settings.embedding_api_key.get_secret_value()),
+      "ocr_configured": bool(settings.ocr_access_key_id.get_secret_value()
+                              and settings.ocr_access_key_secret.get_secret_value())}
 
   for router, tag in [(auth.router, "auth"), (cases.router, "cases"),
                        (files.router, "files"), (conversations.router, "conversations"), (analyses.router, "analyses")]:

@@ -8,8 +8,8 @@ const emit = defineEmits<{
   (e: "toggle"): void;
 }>();
 
-function openAgreement() {
-  uni.navigateTo({ url: "/pages/agreement/index" });
+function openAgreement(docType: "user_service" | "privacy_policy" | "disclaimer") {
+  uni.navigateTo({ url: `/pages/agreement/index?docType=${docType}` });
 }
 </script>
 
@@ -24,16 +24,16 @@ function openAgreement() {
     </view>
     <view class="agreement-text">
       <text>未注册手机号验证通过后将自动注册，并同意</text>
-      <text class="agreement-link" @click="openAgreement">
+      <text class="agreement-link" @click="openAgreement('user_service')">
         {{ bracketed ? "《用户服务》" : "用户服务" }}
       </text>
       <text>{{ bracketed ? " 和 " : "、" }}</text>
-      <text class="agreement-link" @click="openAgreement">
+      <text class="agreement-link" @click="openAgreement('privacy_policy')">
         {{ bracketed ? "《隐私政策》" : "隐私政策" }}
       </text>
       <text> 和 </text>
       <text class="agreement-link" @click="openAgreement">
-        {{ bracketed ? "《免费声明》" : "免费声明" }}
+        {{ bracketed ? "《免责声明》" : "免责声明" }}
       </text>
     </view>
   </view>

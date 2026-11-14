@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { storeToRefs } from "pinia";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import AgreementBar from "./components/AgreementBar.vue";
 import AgreementModal from "./components/AgreementModal.vue";
 import { getNavMetrics } from "@/platform/wechat/nav";
@@ -13,6 +13,16 @@ const { agreed, profile } = storeToRefs(auth);
 const metrics = getNavMetrics();
 const agreementModalVisible = ref(false);
 const loggingIn = ref(false);
+const loginLabel = computed(() => {
+  if (loggingIn.value) return "登录中...";
+  if (USE_MOCK) return "本机号码一键登录";
+  // #ifdef MP-WEIXIN
+  return "微信手机号授权登录";
+  // #endif
+  // #ifndef MP-WEIXIN
+  return import.meta.env.DEV ? "开发测试登录" : "请使用微信小程序登录";
+  // #endif
+});
 
 onMounted(() => {
   if (!USE_MOCK) {
@@ -36,16 +46,20 @@ async function completeDevOrMockLogin() {
     return;
   }
   if (loggingIn.value) return;
+  if (!import.meta.env.DEV) {
+    uni.showToast({ title: "请使用微信小程序授权登录", icon: "none" });
+    return;
+  }
   loggingIn.value = true;
   try {
     const res = await auth.withAgreementIds((docIds) =>
-      devLogin("demo-user", docIds),
+      devLogin("demo", docIds),
     );
     await finishAuth(res);
   } catch (error) {
     const msg =
       error instanceof ApiError && error.status === 404
-        ? "请使用手机号验证码登录"
+        ? "开发登录未启用，请使用微信小程序"
         : error instanceof Error
           ? error.message
           : "登录失败，请重试";
@@ -99,7 +113,7 @@ async function handleWechatPhoneNumber(event: {
   }
   const phoneCode = event?.detail?.code;
   if (!phoneCode) {
-    await completeDevOrMockLogin();
+    uni.showToast({ title: "未获得手机号授权，请重新授权", icon: "none" });
     return;
   }
   if (loggingIn.value) return;
@@ -130,9 +144,9 @@ function openPhoneLogin() {
     :style="{ paddingTop: `${metrics.statusBarHeight}px` }"
   >
     <image class="login-logo" src="/static/images/logo.png" mode="aspectFit" />
-    <text class="phone-big">{{ profile.phone || "135****8890" }}</text>
+    <text class="phone-big">{{ profile.phone || (USE_MOCK ? "135****8890" : "欢迎使用律法AI") }}</text>
     <text class="phone-sub">
-      {{ USE_MOCK ? "中国移动提供认证服务" : "微信/开发快捷登录认证" }}
+      {{ USE_MOCK ? "中国移动提供认证服务" : "授权后获取手机号，用于账号登录" }}
     </text>
 
     <view class="actions">
@@ -144,15 +158,15 @@ function openPhoneLogin() {
         :disabled="loggingIn"
         @getphonenumber="handleWechatPhoneNumber"
       >
-        {{ loggingIn ? "登录中..." : "本机号码一键登录" }}
+        {{ loginLabel }}
       </button>
       <view v-else class="btn-primary" @click="handleOneClickLogin">
-        {{ loggingIn ? "登录中..." : "本机号码一键登录" }}
+        {{ loginLabel }}
       </view>
       <!-- #endif -->
       <!-- #ifndef MP-WEIXIN -->
       <view class="btn-primary" @click="handleOneClickLogin">
-        {{ loggingIn ? "登录中..." : "本机号码一键登录" }}
+        {{ loginLabel }}
       </view>
       <!-- #endif -->
       <view class="alt-link" @click="openPhoneLogin">其他手机号/账号登录</view>

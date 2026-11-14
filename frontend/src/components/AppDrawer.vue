@@ -2,7 +2,7 @@
 import { computed, ref } from "vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import { getNavMetrics } from "@/platform/wechat/nav";
-import { fetchProfile } from "@/services/profile";
+import { useAuthStore } from "@/stores/auth";
 import type { UserProfile } from "@/types/user";
 
 defineProps<{
@@ -22,9 +22,10 @@ const metrics = getNavMetrics();
 const profile = ref<UserProfile | null>(null);
 const logoutVisible = ref(false);
 
-fetchProfile().then((data) => {
+const auth = useAuthStore();
+auth.loadProfile().then((data) => {
   profile.value = data;
-});
+}).catch(() => { profile.value = { ...auth.profile }; });
 
 const roleText = computed(() => {
   const roleLabel = profile.value?.role_label || "企业";

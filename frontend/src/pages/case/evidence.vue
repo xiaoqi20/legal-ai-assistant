@@ -13,6 +13,14 @@ const keyword = ref("");
 const requirements = ref<EvidenceRequirement[]>([]);
 const loading = ref(true);
 
+const introCopy = computed(() => {
+  const sources = new Set(requirements.value.map((item) => item.source).filter(Boolean));
+  if (sources.size > 1) return "清单包含 AI 生成和人工维护内容，请按收集要求准备材料。";
+  if (sources.has("manual")) return "以下证据目录由人工维护，请按收集要求准备材料。";
+  if (sources.has("ai")) return "以下证据目录由 AI 根据案情生成，请按收集要求准备材料。";
+  return "请按下方收集要求准备材料。";
+});
+
 const filtered = computed(() => {
   const query = keyword.value.trim();
   if (!query) return requirements.value;
@@ -57,7 +65,7 @@ function open(item: EvidenceRequirement) {
       <view class="intro">
         <text class="intro-case">{{ caseTitle }}</text>
         <text class="intro-title">证据资料清单</text>
-        <text class="intro-sub">以下证据目录由 AI 根据案情生成，请按收集要求准备材料。</text>
+        <text class="intro-sub">{{ introCopy }}</text>
       </view>
 
       <SearchInput v-model="keyword" placeholder="搜索证据名称或收集要求" />

@@ -1,5 +1,4 @@
-import { request, USE_MOCK } from "@/services/request";
-import { useAuthStore } from "@/stores/auth";
+import { request } from "@/services/request";
 import type { UserProfile, UserRoleType } from "@/types/user";
 
 export interface ProfileUpdatePayload {
@@ -36,10 +35,6 @@ function normalizeProfile(raw: Partial<UserProfile>): UserProfile {
 }
 
 export async function fetchProfile(): Promise<UserProfile> {
-  const auth = useAuthStore();
-  if (USE_MOCK) {
-    return { ...auth.profile };
-  }
   const data = await request<Partial<UserProfile>>("/profile");
   return normalizeProfile(data);
 }
@@ -47,10 +42,6 @@ export async function fetchProfile(): Promise<UserProfile> {
 export async function updateProfile(
   payload: ProfileUpdatePayload,
 ): Promise<UserProfile> {
-  const auth = useAuthStore();
-  if (USE_MOCK) {
-    return auth.applyLocalProfile(payload);
-  }
   const body: ProfileUpdatePayload = {
     role_type: payload.role_type,
     real_name: payload.real_name.trim(),

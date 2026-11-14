@@ -40,8 +40,7 @@ def test_scanned_and_encrypted_pdf_report_specific_errors():
   writer.add_blank_page(width=100, height=100)
   data = io.BytesIO()
   writer.write(data)
-  with pytest.raises(ValueError, match="ocr_required"):
-    extract(data.getvalue(), "application/pdf", 10000)
+  assert extract(data.getvalue(), "application/pdf", 10000) == [(1, "")]
   writer.encrypt("test-password")
   data = io.BytesIO()
   writer.write(data)

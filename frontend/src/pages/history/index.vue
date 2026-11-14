@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onShow } from "@dcloudio/uni-app";
-import { computed, ref } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
 import PageNav from "@/components/PageNav.vue";
 import SearchInput from "@/components/SearchInput.vue";
 import {
   deleteConversations,
-  fetchConversations,
+  fetchConversationsPage,
   renameConversation,
 } from "@/services/history";
 import { USE_MOCK } from "@/services/request";
@@ -18,6 +18,11 @@ const groups: ("全部" | ConversationGroup)[] = ["全部", "本周", "本月", 
 const multiMode = ref(false);
 const selected = ref<number[]>([]);
 const loading = ref(true);
+const loadingMore = ref(false);
+const nextCursor = ref<number | null>(null);
+const loadError = ref("");
+let loadVersion = 0;
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
 
 const filtered = computed(() => {
   const query = keyword.value.trim();
@@ -42,22 +47,49 @@ const allSelected = computed(
   () => filtered.value.length > 0 && selected.value.length === filtered.value.length,
 );
 
-async function load() {
-  loading.value = true;
+async function load(more = false) {
+  if (more && (loading.value || loadingMore.value || nextCursor.value === null)) return;
+  const version = ++loadVersion;
+  const query = keyword.value.trim();
+  if (more) loadingMore.value = true;
+  else {
+    loading.value = true;
+    loadingMore.value = false;
+    selected.value = [];
+  }
+  loadError.value = "";
   try {
-    conversations.value = await fetchConversations();
+    const page = await fetchConversationsPage(query, more ? nextCursor.value! : undefined);
+    if (version !== loadVersion) return;
+    conversations.value = more ? [...conversations.value, ...page.items] : page.items;
+    nextCursor.value = page.next_cursor;
   } catch (error) {
-    const msg = error instanceof Error ? error.message : "加载历史对话失败";
-    uni.showToast({ title: msg, icon: "none" });
+    if (version !== loadVersion) return;
+    loadError.value = error instanceof Error ? error.message : "加载历史对话失败";
   } finally {
-    loading.value = false;
+    if (version === loadVersion) {
+      loading.value = false;
+      loadingMore.value = false;
+    }
   }
 }
 
 onShow(() => {
+  clearTimeout(searchTimer);
   void load();
 });
-void load();
+watch(keyword, () => {
+  // Invalidate the previous search immediately, including its pending next page.
+  loadVersion += 1;
+  loading.value = true;
+  loadingMore.value = false;
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(() => { void load(); }, 250);
+});
+onUnmounted(() => {
+  loadVersion += 1;
+  clearTimeout(searchTimer);
+});
 
 function open(conversation: ConversationSummary) {
   if (multiMode.value) {
@@ -207,6 +239,7 @@ function newChat() {
       </scroll-view>
 
       <view v-if="loading" class="state">加载中…</view>
+      <view v-else-if="loadError" class="state" @click="load()">{{ loadError }}，点击重试</view>
       <view v-else-if="!grouped.length" class="state">没有找到相关对话</view>
 
       <view v-else class="groups">
@@ -231,6 +264,9 @@ function newChat() {
             </text>
           </view>
         </view>
+      </view>
+      <view v-if="!loading && nextCursor !== null && !loadError" class="state" @click="load(true)">
+        {{ loadingMore ? "加载中…" : "加载更多对话" }}
       </view>
       <view class="tail" />
     </scroll-view>

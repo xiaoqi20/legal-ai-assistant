@@ -21,8 +21,7 @@ def extract(data: bytes, mime_type: str, max_chars: int):
       total += len(text)
       if total > max_chars:
         raise ValueError("document_too_large")
-      if text:
-        pages.append((number, text))
+      pages.append((number, text))
   elif mime_type == "application/vnd.openxmlformats-officedocument.wordprocessingml.document":
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
       if sum(item.file_size for item in archive.infolist()) > 50 * 1024 * 1024:
@@ -34,13 +33,63 @@ def extract(data: bytes, mime_type: str, max_chars: int):
     pages = [(None, "\n".join(texts).replace("\x00", "").strip())]
   elif mime_type == "text/plain":
     pages = [(None, data.decode("utf-8-sig").replace("\x00", "").strip())]
+  elif mime_type in {"image/jpeg", "image/png"}:
+    valid = data.startswith(b"\xff\xd8\xff") if mime_type == "image/jpeg" else data.startswith(b"\x89PNG\r\n\x1a\n")
+    if not valid:
+      raise ValueError("invalid_image")
+    pages = [(1, "")]
   else:
     raise ValueError("unsupported_document")
-  if not any(text for _, text in pages):
+  if mime_type not in {"application/pdf", "image/jpeg", "image/png"} and not any(text for _, text in pages):
     raise ValueError("no_extractable_text_ocr_required")
   if sum(len(text) for _, text in pages) > max_chars:
     raise ValueError("document_too_large")
   return pages
+
+
+def _render_pdf_page_child(connection, data, page_no):
+  try:
+    import pypdfium2 as pdfium
+    pdf = pdfium.PdfDocument(data)
+    if page_no < 1 or page_no > len(pdf):
+      raise ValueError("invalid_pdf_page")
+    bitmap = pdf[page_no - 1].render(scale=2.0)
+    image = bitmap.to_pil()
+    output = io.BytesIO()
+    image.save(output, format="PNG")
+    connection.send((True, output.getvalue()))
+  except Exception as error:
+    code = str(error) if isinstance(error, ValueError) and str(error).isidentifier() else "pdf_render_failed"
+    connection.send((False, code))
+  finally:
+    connection.close()
+
+
+async def render_pdf_page_isolated(data: bytes, page_no: int):
+  import asyncio
+  import multiprocessing
+  context = multiprocessing.get_context("spawn")
+  receiver, sender = context.Pipe(duplex=False)
+  process = context.Process(target=_render_pdf_page_child, args=(sender, data, page_no), daemon=True)
+  process.start()
+  sender.close()
+  try:
+    while not receiver.poll():
+      if not process.is_alive():
+        raise ValueError("pdf_renderer_exited")
+      await asyncio.sleep(0.05)
+    ok, result = receiver.recv()
+    if not ok:
+      raise ValueError(result)
+    return result
+  finally:
+    receiver.close()
+    if process.is_alive():
+      process.terminate()
+    await asyncio.to_thread(process.join, 2)
+    if process.is_alive():
+      process.kill()
+      await asyncio.to_thread(process.join, 1)
 
 
 def split(pages, size, overlap, max_chunks):

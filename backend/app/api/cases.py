@@ -1,8 +1,8 @@
 from fastapi import APIRouter, Query, Request
-from sqlalchemy import select
+from sqlalchemy import insert, select
 
 from app.access import DB, User, case_scope, require_case
-from app.schemas import Retrieval
+from app.schemas import CaseCreate, Retrieval
 from app.services.rag import retrieve
 
 router = APIRouter()
@@ -28,7 +28,78 @@ async def cases(request: Request, db: DB, user: User, keyword: str = Query("", m
 
 @router.get("/cases/{case_id}")
 async def case(case_id: int, request: Request, db: DB, user: User):
-  return await require_case(db, request.app.state.db.t, user["id"], case_id)
+  t = request.app.state.db.t
+  row = await require_case(db, t, user["id"], case_id)
+  parties = (await db.execute(select(t.case_parties).where(t.case_parties.c.case_id == case_id)
+    .order_by(t.case_parties.c.side, t.case_parties.c.sort_order, t.case_parties.c.id))).mappings().all()
+  party_rows = [dict(party) for party in parties]
+  return row | {
+    "parties": party_rows,
+    "our_parties": [party["name"] for party in party_rows if party["side"] == "our"],
+    "opponent_parties": [party["name"] for party in party_rows if party["side"] == "opponent"],
+  }
+
+
+@router.post("/cases", status_code=201)
+async def create_case(payload: CaseCreate, request: Request, db: DB, user: User):
+  t = request.app.state.db.t
+  row = (await db.execute(insert(t.cases).values(
+    owner_user_id=user["id"],
+    title=payload.title,
+    case_type=payload.case_type,
+    procedure=payload.procedure,
+    summary=payload.summary,
+    claim=payload.claim,
+    handling_identity=payload.handling_identity,
+    party_role_label=payload.party_role_label,
+  ).returning(t.cases))).mappings().one()
+
+  party_rows = []
+  for side, names in (("our", payload.our_parties), ("opponent", payload.opponent_parties)):
+    party_rows.extend({
+      "case_id": row["id"],
+      "party_role": _party_role(payload.party_role_label, side),
+      "party_type": "person",
+      "name": name,
+      "side": side,
+      "sort_order": order,
+    } for order, name in enumerate(names))
+  if party_rows:
+    await db.execute(insert(t.case_parties), party_rows)
+
+  client = request.client
+  await db.execute(insert(t.audit_logs).values(
+    user_id=user["id"], action="case.created", resource_type="case", resource_id=row["id"],
+    ip=client.host if client else None,
+    user_agent=request.headers.get("user-agent"),
+    metadata={"case_type": payload.case_type, "procedure": payload.procedure},
+  ))
+  await db.commit()
+  return dict(row) | {
+    "parties": party_rows,
+    "our_parties": payload.our_parties,
+    "opponent_parties": payload.opponent_parties,
+  }
+
+
+def _party_role(role_label: str | None, side: str) -> str:
+  """Keep legal party roles where the intake form gives an unambiguous role."""
+  role = (role_label or "").strip()
+  pairs = {
+    "原告": ("plaintiff", "defendant"),
+    "被告": ("defendant", "plaintiff"),
+    "申请人": ("applicant", "respondent"),
+    "被申请人": ("respondent", "applicant"),
+    "第三人": ("third_party", "other"),
+    "行政相对人/原告": ("plaintiff", "other"),
+    "利害关系人": ("third_party", "other"),
+    "被害人/报案人": ("applicant", "respondent"),
+    "犯罪嫌疑人/被告人": ("respondent", "applicant"),
+  }
+  roles = pairs.get(role)
+  if not roles:
+    return "other"
+  return roles[0] if side == "our" else roles[1]
 
 
 @router.get("/cases/{case_id}/evidence-requirements")
@@ -55,7 +126,27 @@ async def materials(case_id: int, request: Request, db: DB, user: User,
   if before_id:
     query = query.where(t.evidence_items.c.id < before_id)
   rows = (await db.execute(query.order_by(t.evidence_items.c.id.desc()).limit(limit))).mappings().all()
-  return [dict(row) for row in rows]
+  items = [dict(row) for row in rows]
+  if not items:
+    return items
+  file_query = (
+    select(
+      t.evidence_item_files.c.evidence_item_id,
+      t.files.c.id,
+      t.files.c.original_name,
+      t.files.c.mime_type,
+    ).join(t.files, t.files.c.id == t.evidence_item_files.c.file_id)
+    .where(t.evidence_item_files.c.evidence_item_id.in_([row["id"] for row in items]),
+           t.files.c.status == "available")
+    .order_by(t.evidence_item_files.c.evidence_item_id, t.evidence_item_files.c.sort_order)
+  )
+  files = (await db.execute(file_query)).mappings().all()
+  files_by_item: dict[int, list[dict]] = {}
+  for file in files:
+    files_by_item.setdefault(file["evidence_item_id"], []).append({
+      "id": file["id"], "original_name": file["original_name"], "mime_type": file["mime_type"]
+    })
+  return [row | {"files": files_by_item.get(row["id"], [])} for row in items]
 
 
 @router.get("/cases/{case_id}/materials/{material_id}")
@@ -80,7 +171,8 @@ async def documents(case_id: int, request: Request, db: DB, user: User,
                     limit: int = Query(100, ge=1, le=100), before_id: int | None = None):
   t = request.app.state.db.t
   await require_case(db, t, user["id"], case_id)
-  query = select(t.case_documents, t.files.c.original_name, t.files.c.mime_type).join(
+  query = select(t.case_documents, t.files.c.original_name, t.files.c.mime_type,
+    t.files.c.metadata["parse_status"].as_string().label("parse_status")).join(
     t.files, t.files.c.id == t.case_documents.c.file_id).where(t.case_documents.c.case_id == case_id,
     t.files.c.status == "available", t.case_documents.c.title.icontains(keyword, autoescape=True))
   if category:

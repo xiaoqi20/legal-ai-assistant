@@ -49,6 +49,14 @@
       }
     },
     {
+      "path": "pages/case/create",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "新建案件",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
       "path": "pages/case/evidence",
       "style": {
         "navigationStyle": "custom",
@@ -85,6 +93,14 @@
       "style": {
         "navigationStyle": "custom",
         "navigationBarTitleText": "案件文档",
+        "enablePullDownRefresh": false
+      }
+    },
+    {
+      "path": "pages/case/ocr-review",
+      "style": {
+        "navigationStyle": "custom",
+        "navigationBarTitleText": "OCR 文字校对",
         "enablePullDownRefresh": false
       }
     },

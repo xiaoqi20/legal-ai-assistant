@@ -82,7 +82,7 @@ async function runUpload(params: {
   uploading.value = true;
   try {
     const categoryCode = CATEGORY_TO_CODE[activeCategory.value] || "other";
-    await uploadCaseDocument({
+    const status = await uploadCaseDocument({
       caseId: caseId.value,
       filename: params.filename,
       sizeBytes: params.sizeBytes,
@@ -90,7 +90,12 @@ async function runUpload(params: {
       file: params.file,
       filePath: params.filePath,
     });
-    uni.showToast({ title: "上传并解析完成", icon: "success" });
+    uni.showToast({
+      title: status.metadata?.parse_status === "review_required"
+        ? "识别完成，请校对低置信度页面"
+        : status.status === "available" ? "上传并解析完成" : "已上传，后台仍在解析，请稍后刷新",
+      icon: status.metadata?.parse_status === "review_required" ? "none" : status.status === "available" ? "success" : "none",
+    });
     await load();
   } catch (error) {
     const msg = error instanceof Error ? error.message : "文档上传失败";
@@ -98,6 +103,11 @@ async function runUpload(params: {
   } finally {
     uploading.value = false;
   }
+}
+
+function reviewDocument(doc: CaseDocument) {
+  if (!doc.file_id) return;
+  uni.navigateTo({ url: `/pages/case/ocr-review?fileId=${doc.file_id}&caseId=${caseId.value}` });
 }
 
 function handleUpload() {
@@ -110,7 +120,7 @@ function handleUpload() {
   // #ifdef H5
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".pdf,.docx,.txt";
+  input.accept = ".pdf,.jpg,.jpeg,.png,.docx,.txt";
   input.onchange = () => {
     const selected = input.files?.[0];
     if (!selected) return;
@@ -127,7 +137,7 @@ function handleUpload() {
   uni.chooseMessageFile({
     count: 1,
     type: "file",
-    extension: ["pdf", "docx", "txt"],
+    extension: ["pdf", "jpg", "jpeg", "png", "docx", "txt"],
     success: (res) => {
       const picked = res.tempFiles?.[0];
       if (!picked) return;
@@ -187,6 +197,8 @@ function handleUpload() {
             <text class="doc-meta">{{ doc.uploader }} | {{ doc.uploaded_at }}</text>
           </view>
           <text class="category">{{ doc.category }}</text>
+          <text v-if="doc.parse_status === 'review_required'" class="review-link" @click.stop="reviewDocument(doc)">校对</text>
+          <text v-else-if="doc.parse_status === 'index_queued'" class="index-status">建立索引中</text>
         </view>
       </view>
       <view class="tail" />
@@ -317,6 +329,19 @@ function handleUpload() {
   margin-left: 12rpx;
   font-size: 20rpx;
   color: $muted;
+}
+
+.review-link {
+  flex: none;
+  padding: 12rpx 18rpx;
+  color: $brand;
+  font-size: 24rpx;
+}
+
+.index-status {
+  flex: none;
+  color: #8a5a1c;
+  font-size: 22rpx;
 }
 
 .state {

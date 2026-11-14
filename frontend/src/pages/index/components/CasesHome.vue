@@ -1,23 +1,34 @@
 <script setup lang="ts">
-import { onMounted, ref } from "vue";
 import { storeToRefs } from "pinia";
+import { computed, onMounted, ref } from "vue";
 import CaseCard from "./CaseCard.vue";
 import ComposerBar from "@/components/ComposerBar.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import { fetchCases } from "@/services/cases";
+import { useCaseCreateStore } from "@/stores/caseCreate";
 import { useHomeStore } from "@/stores/home";
 import type { CaseSummary } from "@/types/case";
 import { getGreeting } from "@/utils/greeting";
 
 const home = useHomeStore();
+const caseCreate = useCaseCreateStore();
 const { caseKeyword, caseDraft } = storeToRefs(home);
+const { localCases, hasDraft } = storeToRefs(caseCreate);
 
-const cases = ref<CaseSummary[]>([]);
+const remoteCases = ref<CaseSummary[]>([]);
 const loading = ref(false);
 const errorMessage = ref("");
 const caseAlertVisible = ref(false);
 const selectingCase = ref(false);
 const greeting = getGreeting();
+
+const displayCases = computed(() => {
+  const kw = caseKeyword.value.trim().toLowerCase();
+  const filteredLocal = localCases.value.filter(
+    (item) => !kw || item.title.toLowerCase().includes(kw),
+  );
+  return [...filteredLocal, ...remoteCases.value];
+});
 
 let requestId = 0;
 
@@ -28,7 +39,7 @@ async function loadCases() {
 
   try {
     const result = await fetchCases(caseKeyword.value);
-    if (current === requestId) cases.value = result;
+    if (current === requestId) remoteCases.value = result;
   } catch (error) {
     if (current === requestId) {
       errorMessage.value =
@@ -37,6 +48,10 @@ async function loadCases() {
   } finally {
     if (current === requestId) loading.value = false;
   }
+}
+
+function openCreateCase() {
+  uni.navigateTo({ url: "/pages/case/create" });
 }
 
 function openCase(item: CaseSummary) {
@@ -123,14 +138,27 @@ onMounted(loadCases);
         </view>
       </view>
 
-      <view v-if="loading" class="state-block">加载中…</view>
+      <view class="case-section-bar">
+        <view class="case-section-left">
+          <view class="case-section-indicator" />
+          <text class="case-section-title">我的案件</text>
+          <text class="case-section-count">({{ displayCases.length }})</text>
+        </view>
+        <view class="add-case-pill" @click="openCreateCase">
+          <text class="add-case-plus">+</text>
+          <text>新建案件</text>
+          <view v-if="hasDraft" class="draft-dot" />
+        </view>
+      </view>
 
-      <view v-else-if="errorMessage" class="state-block">
+      <view v-if="loading && !displayCases.length" class="state-block">加载中…</view>
+
+      <view v-else-if="errorMessage && !displayCases.length" class="state-block">
         <text>{{ errorMessage }}</text>
         <view class="retry" @click="loadCases">重试</view>
       </view>
 
-      <view v-else-if="!cases.length" class="state-block">
+      <view v-else-if="!displayCases.length" class="state-block">
         没有找到相关案件
       </view>
 
@@ -139,7 +167,7 @@ onMounted(loadCases);
           <text class="select-tip-text">请选择一个已分析案件进行问答</text>
           <text class="select-tip-cancel" @click="cancelSelection">取消</text>
         </view>
-        <view v-for="item in cases" :key="item.id" class="case-item">
+        <view v-for="item in displayCases" :key="item.id" class="case-item">
           <CaseCard
             :item="item"
             :show-check="selectingCase"
@@ -223,6 +251,66 @@ onMounted(loadCases);
 
 .search-wrap {
   padding: 4rpx 36rpx 8rpx;
+}
+
+.case-section-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16rpx 36rpx 20rpx;
+}
+
+.case-section-left {
+  display: flex;
+  align-items: center;
+}
+
+.case-section-indicator {
+  width: 8rpx;
+  height: 30rpx;
+  border-radius: 4rpx;
+  background: $brand;
+  margin-right: 12rpx;
+}
+
+.case-section-title {
+  font-size: 30rpx;
+  font-weight: 700;
+  color: #2b3445;
+}
+
+.case-section-count {
+  margin-left: 8rpx;
+  font-size: 25rpx;
+  font-weight: 500;
+  color: #8b95a7;
+}
+
+.add-case-pill {
+  height: 58rpx;
+  padding: 0 24rpx;
+  border-radius: 30rpx;
+  background: #edf3ff;
+  border: 2rpx solid #d4e3ff;
+  color: $brand;
+  font-size: 25rpx;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8rpx;
+}
+
+.add-case-plus {
+  font-size: 30rpx;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.draft-dot {
+  width: 12rpx;
+  height: 12rpx;
+  border-radius: 50%;
+  background: #ff7a00;
 }
 
 .search-box {

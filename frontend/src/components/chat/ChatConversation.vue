@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, computed, nextTick, ref } from "vue";
+import { onMounted, onUnmounted, computed, nextTick, reactive, ref } from "vue";
 import ComposerBar from "@/components/ComposerBar.vue";
 import MarkdownContent from "@/components/chat/MarkdownContent.vue";
 import { ANALYSIS_STATUS_META, PROCEDURE_LABELS } from "@/constants/case";
@@ -14,7 +14,7 @@ import { openRemoteFile } from "@/services/files";
 import {
   cancelConversationMessage,
   createConversation,
-  fetchConversationMessages,
+  fetchConversationMessagesPage,
   submitMessageFeedback,
 } from "@/services/history";
 import { USE_MOCK, createClientId } from "@/services/request";
@@ -23,6 +23,7 @@ import {
   type SseCitation,
   type StreamHandle,
 } from "@/services/sse";
+import type { ConversationMessageRecord } from "@/types/conversation";
 import type { CaseSummary } from "@/types/case";
 
 interface ChatMessage {
@@ -36,6 +37,8 @@ interface ChatMessage {
   citations?: SseCitation[];
   feedback?: "like" | "dislike";
   streaming?: boolean;
+  status?: "streaming" | "completed" | "failed" | "cancelled";
+  errorMessage?: string;
 }
 
 const props = defineProps<{
@@ -51,6 +54,7 @@ const messages = ref<ChatMessage[]>([]);
 const draft = ref("");
 const typing = ref(false);
 const loadingHistory = ref(false);
+const earlierCursor = ref<number | null>(null);
 const attachOpen = ref(false);
 const scrollTarget = ref("");
 const activeConversationId = ref<number | null>(props.conversationId ?? null);
@@ -66,6 +70,7 @@ let sequence = 0;
 let timer: ReturnType<typeof setTimeout> | null = null;
 let streamHandle: StreamHandle | null = null;
 let unmounted = false;
+let generationVersion = 0;
 
 const composerPlaceholder = computed(() => {
   if (messages.value.length) return "继续提问…";
@@ -123,17 +128,10 @@ onMounted(async () => {
   if (!USE_MOCK && props.conversationId) {
     loadingHistory.value = true;
     try {
-      const historyItems = await fetchConversationMessages(props.conversationId);
+      const page = await fetchConversationMessagesPage(props.conversationId);
       if (!unmounted) {
-        messages.value = historyItems
-          .filter((item) => item.role === "user" || item.role === "assistant")
-          .map((item) => ({
-            id: ++sequence,
-            serverId: item.id,
-            role: item.role as "user" | "assistant",
-            text: item.content,
-            citations: item.citations,
-          }));
+        messages.value = mapHistory(page.items);
+        earlierCursor.value = page.next_cursor;
         const last = messages.value[messages.value.length - 1];
         if (last) scrollToLastUser(last.id);
       }
@@ -147,13 +145,43 @@ onMounted(async () => {
 
   // 4. 若携带首条提问（如首页快捷发问、案件卡片入口），自动发送
   const question = (props.initialQuestion || "").trim();
-  if (question) {
+  if (question && !unmounted) {
     void send(question);
   }
 });
 
+function mapHistory(items: ConversationMessageRecord[]): ChatMessage[] {
+  return items.filter((item) => item.role === "user" || item.role === "assistant")
+    .map((item) => ({
+      id: ++sequence,
+      serverId: item.id,
+      role: item.role as "user" | "assistant",
+      text: item.content,
+      citations: item.citations,
+      status: item.status,
+    }));
+}
+
+async function loadEarlier() {
+  if (!props.conversationId || earlierCursor.value === null || loadingHistory.value || typing.value) return;
+  loadingHistory.value = true;
+  const previousFirst = messages.value[0]?.id;
+  try {
+    const page = await fetchConversationMessagesPage(props.conversationId, earlierCursor.value);
+    if (unmounted) return;
+    messages.value = [...mapHistory(page.items), ...messages.value];
+    earlierCursor.value = page.next_cursor;
+    if (previousFirst) scrollToLastUser(previousFirst);
+  } catch (error) {
+    uni.showToast({ title: error instanceof Error ? error.message : "加载历史消息失败", icon: "none" });
+  } finally {
+    loadingHistory.value = false;
+  }
+}
+
 onUnmounted(() => {
   unmounted = true;
+  generationVersion += 1;
   // 组件卸载前通知服务端中断流并关闭底层传输连接
   if (activeConversationId.value && activeServerMessageId.value) {
     void cancelConversationMessage(
@@ -178,6 +206,7 @@ function scrollToLastUser(id: number) {
  * 2) 再中止客户端 SSE 连接并更新 UI 状态。
  */
 async function stopGenerating() {
+  generationVersion += 1;
   const convId = activeConversationId.value;
   const msgId = activeServerMessageId.value;
   cleanupActiveGeneration();
@@ -187,6 +216,7 @@ async function stopGenerating() {
   const last = messages.value[messages.value.length - 1];
   if (last?.streaming) {
     last.streaming = false;
+    last.status = "cancelled";
     if (!last.text) last.text = "已停止生成。";
   }
 
@@ -200,7 +230,9 @@ async function send(
   scrollToUser = messages.value.length > 0,
 ) {
   const question = text.trim();
-  if (!question || typing.value) return;
+  if (!question || typing.value || loadingHistory.value || unmounted) return;
+  const version = ++generationVersion;
+  const isCurrent = () => !unmounted && version === generationVersion;
 
   draft.value = "";
   attachOpen.value = false;
@@ -230,13 +262,15 @@ async function send(
   }
 
   // 真实后端模式：先确保会话存在，再占位 assistant 气泡并通过 SSE 增量拼接
-  const assistantMessage: ChatMessage = {
+  const assistantMessage = reactive<ChatMessage>({
     id: ++sequence,
     role: "assistant",
     text: "",
     citations: [],
     streaming: true,
-  };
+    status: "streaming",
+  });
+  messages.value.push(assistantMessage);
 
   try {
     if (!activeConversationId.value) {
@@ -244,11 +278,11 @@ async function send(
         case_id: props.mode === "case" ? props.caseId ?? 1 : null,
         title: question.slice(0, 30),
       });
+      if (!isCurrent()) return;
       activeConversationId.value = created.id;
     }
 
     const convId = activeConversationId.value;
-    messages.value.push(assistantMessage);
     scrollToLastUser(assistantMessage.id);
 
     streamHandle = streamSsePost(
@@ -259,17 +293,22 @@ async function send(
       },
       {
         onMeta: (payload) => {
+          if (!isCurrent()) return;
           // 记录后端持久化的 assistant message_id，供取消与反馈使用
           assistantMessage.serverId = payload.message_id;
           activeServerMessageId.value = payload.message_id;
         },
         onCitations: (sources) => {
+          if (!isCurrent()) return;
           assistantMessage.citations = sources;
         },
         onDelta: (chunk) => {
+          if (!isCurrent()) return;
           assistantMessage.text += chunk;
         },
         onError: (errPayload) => {
+          if (!isCurrent()) return;
+          assistantMessage.errorMessage = errPayload.message || "本次回答未完成";
           if (!assistantMessage.text) {
             assistantMessage.text = errPayload.message || "回答生成中断，请重试";
           } else {
@@ -279,28 +318,33 @@ async function send(
             });
           }
         },
-        onDone: () => {
+        onDone: (payload) => {
+          if (!isCurrent()) return;
+          assistantMessage.status = payload.status;
           assistantMessage.streaming = false;
-          typing.value = false;
           activeServerMessageId.value = null;
-          streamHandle = null;
         },
       },
     );
 
     await streamHandle.done;
   } catch (error) {
+    if (!isCurrent()) return;
     const msg = error instanceof Error ? error.message : "发送消息失败";
+    assistantMessage.status = "failed";
+    assistantMessage.errorMessage = msg;
     if (!assistantMessage.text) {
       assistantMessage.text = msg;
     } else {
       uni.showToast({ title: msg, icon: "none" });
     }
   } finally {
-    assistantMessage.streaming = false;
-    typing.value = false;
-    activeServerMessageId.value = null;
-    streamHandle = null;
+    if (isCurrent()) {
+      assistantMessage.streaming = false;
+      typing.value = false;
+      activeServerMessageId.value = null;
+      streamHandle = null;
+    }
   }
 }
 
@@ -335,7 +379,9 @@ function download() {
 
 async function feedback(message: ChatMessage, type: "like" | "dislike") {
   const prev = message.feedback;
-  const next = prev === type ? undefined : type;
+  // The API stores one rating; it does not support clearing a submitted rating.
+  const next = USE_MOCK && prev === type ? undefined : type;
+  if (prev === next) return;
   message.feedback = next;
 
   if (USE_MOCK || !next) return;
@@ -382,6 +428,9 @@ function openMic() {
       :show-scrollbar="false"
       :scroll-into-view="scrollTarget"
     >
+      <view v-if="earlierCursor !== null" class="chat-time" @click="loadEarlier">
+        {{ loadingHistory ? "加载中…" : "加载更早消息" }}
+      </view>
       <view v-if="messages.length" class="chat-time">{{ headerTime }}</view>
       <view v-if="mode === 'case' && caseDetail" class="context-card">
         <text class="context-title">{{ caseDetail.title }}</text>
@@ -455,6 +504,10 @@ function openMic() {
             <MarkdownContent v-else-if="message.text" :content="message.text" />
             <text v-else class="answer-text">
               {{ message.streaming ? "正在思考…" : "" }}
+            </text>
+            <text v-if="message.status === 'failed' || message.status === 'cancelled' ||
+              (!message.streaming && message.status === 'streaming')" class="answer-disclaimer">
+              {{ message.errorMessage || (message.status === 'cancelled' ? "已停止生成，以上内容未完成" : "本次回答未完成，请查看历史记录后重新提问") }}
             </text>
 
             <!-- 引用来源卡片：展示文档标题、页码与原文片段，支持点击打开原文档 -->

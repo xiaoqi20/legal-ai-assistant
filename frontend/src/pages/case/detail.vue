@@ -10,8 +10,10 @@ import {
   PROCEDURE_LABELS,
 } from "@/constants/case";
 import { fetchCase } from "@/services/caseContent";
+import { useCaseCreateStore } from "@/stores/caseCreate";
 import type { CaseSummary } from "@/types/case";
 
+const caseCreate = useCaseCreateStore();
 const caseId = ref(1);
 const detail = ref<CaseSummary | null>(null);
 const loading = ref(true);
@@ -20,13 +22,20 @@ const draft = ref("");
 const status = computed(() =>
   detail.value ? ANALYSIS_STATUS_META[detail.value.analysis_status] : null,
 );
-const evidence = computed(() =>
-  detail.value
-    ? EVIDENCE_STATUS_META[detail.value.evidence_upload_status]
-    : null,
-);
+const evidence = computed(() => {
+  if (!detail.value) return null;
+  const base = EVIDENCE_STATUS_META[detail.value.evidence_upload_status];
+  if (detail.value.evidence_label) {
+    return { ...base, label: detail.value.evidence_label };
+  }
+  return base;
+});
 const procedure = computed(() =>
-  detail.value ? PROCEDURE_LABELS[detail.value.procedure] : "",
+  detail.value
+    ? detail.value.procedure_label ||
+      PROCEDURE_LABELS[detail.value.procedure] ||
+      "其他"
+    : "",
 );
 
 const tools = [
@@ -59,7 +68,8 @@ const tools = [
 async function load() {
   loading.value = true;
   try {
-    detail.value = await fetchCase(caseId.value);
+    const localFound = caseCreate.findLocalCase(caseId.value);
+    detail.value = localFound ?? (await fetchCase(caseId.value));
   } catch {
     uni.showToast({ title: "案件加载失败", icon: "none" });
   } finally {
@@ -73,6 +83,13 @@ onLoad((options) => {
 });
 
 function openTool(key: string) {
+  if (detail.value?.is_local) {
+    uni.showToast({
+      title: "本地新建案件暂未同步服务端分析",
+      icon: "none",
+    });
+    return;
+  }
   const id = caseId.value;
   const routes: Record<string, string> = {
     chain: `/pages/case/evidence?id=${id}`,

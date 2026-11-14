@@ -2,8 +2,10 @@ import type {
   CaseAnalysisStatus,
   CaseAnalysisType,
   CaseProcedure,
+  CaseType,
   DocumentCategoryCode,
   DocumentCategoryLabel,
+  DraftCaseType,
   EvidenceUploadStatus,
   MaterialStatus,
 } from "@/types/case";
@@ -75,3 +77,67 @@ export const ANALYSIS_TYPE_LABELS: Record<CaseAnalysisType, string> = {
   evidence_chain: "证据链分析",
   evidence_list: "证据清单梳理",
 };
+
+export const CREATE_CASE_TYPES: DraftCaseType[] = [
+  "民事",
+  "刑事",
+  "行政",
+  "不确定",
+];
+
+export const CREATE_STAGE_OPTIONS: Record<DraftCaseType, string[]> = {
+  民事: ["尚未起诉/诉前咨询", "一审", "二审", "再审", "执行", "仲裁", "不确定"],
+  刑事: ["尚未立案/咨询", "侦查阶段", "审查起诉", "一审", "二审", "不确定"],
+  行政: ["尚未起诉/复议前", "行政复议", "一审", "二审", "再审", "不确定"],
+  不确定: ["尚未起诉/诉前咨询", "已进入诉讼/仲裁", "不确定"],
+};
+
+export const CREATE_ROLE_OPTIONS: Record<DraftCaseType, string[]> = {
+  民事: ["原告", "被告", "申请人", "被申请人", "第三人", "不确定"],
+  刑事: ["被害人/报案人", "犯罪嫌疑人/被告人", "近亲属/委托人", "不确定"],
+  行政: ["行政相对人/原告", "利害关系人", "不确定"],
+  不确定: ["主张权利方", "被追责/被诉方", "不确定"],
+};
+
+export const CASE_TYPE_CODE_MAP: Record<DraftCaseType | "", CaseType> = {
+  民事: "civil",
+  刑事: "criminal",
+  行政: "administrative",
+  不确定: "other",
+  "": "other",
+};
+
+export const CASE_PROCEDURE_CODE_MAP: Record<string, CaseProcedure> = {
+  一审: "first_instance",
+  二审: "second_instance",
+  再审: "retrial",
+  执行: "enforcement",
+  仲裁: "arbitration",
+};
+
+export interface CasePromptPreset {
+  key: string;
+  label: string;
+  summary: string;
+}
+
+export const CASE_PROMPT_PRESETS: CasePromptPreset[] = [
+  {
+    key: "loan",
+    label: "借条欠款未还",
+    summary:
+      "我在2024年借给李某五万元，一直没还，有借条，希望追回本金和利息。",
+  },
+  {
+    key: "property",
+    label: "物业漏水索赔",
+    summary:
+      "2025年3月起小区地下车库长期漏水导致我方张某车辆受损，多次向安徽某物业服务有限公司书面报修未果，目前尚未起诉，希望物业公司履行维修义务并赔偿损失1.2万元。",
+  },
+  {
+    key: "labor",
+    label: "劳动欠薪维权",
+    summary:
+      "2024年8月入职某科技有限公司，公司拖欠近3个月工资共计3.6万元并单方解除劳动关系，准备申请劳动仲裁，希望追回欠薪及经济补偿。",
+  },
+];
