@@ -57,6 +57,7 @@ const procedure = computed(
     <WinRateDonut
       class="case-donut"
       :status="item.analysis_status"
+      :win-rate-status="item.win_rate_status"
       :win-rate="item.win_rate"
     />
   </view>

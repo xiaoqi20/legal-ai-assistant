@@ -34,6 +34,7 @@ class Settings(BaseSettings):
   max_concurrent_streams: int = Field(8, ge=1, le=100)
   per_user_requests_per_minute: int = Field(10, ge=1, le=100)
   max_output_tokens: int = Field(2048, ge=64, le=8192)
+  structured_output_tokens: int = Field(8192, ge=512, le=16384)
   max_output_chars: int = Field(32000, ge=100, le=100000)
   max_context_chars: int = Field(16000, ge=1000, le=50000)
   retrieval_top_k: int = Field(6, ge=1, le=20)

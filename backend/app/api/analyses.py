@@ -20,7 +20,8 @@ async def create(case_id: int, payload: AnalysisCreate, request: Request, db: DB
   existing = (await db.execute(select(t.async_jobs).where(t.async_jobs.c.idempotency_key == key))).mappings().first()
   if existing:
     analysis = (await db.execute(select(t.case_analyses).where(t.case_analyses.c.id == existing["resource_id"]))).mappings().one()
-    if analysis["case_id"] != case_id or analysis["analysis_type"] != payload.analysis_type:
+    if (analysis["case_id"] != case_id or analysis["analysis_type"] != payload.analysis_type
+        or existing["payload"].get("material_id") != payload.material_id):
       fail(409, "idempotency_conflict", "该请求标识已用于其他分析")
     return {"analysis_id": analysis["id"], "job_id": existing["id"], "status": analysis["status"]}
   active = (await db.execute(select(t.case_analyses.c.id).where(t.case_analyses.c.case_id == case_id,
@@ -32,11 +33,28 @@ async def create(case_id: int, payload: AnalysisCreate, request: Request, db: DB
   ))).scalar_one()
   if recent >= request.app.state.settings.per_user_requests_per_minute:
     fail(429, "rate_limited", "请求过于频繁，请稍后重试")
+  job_payload = {}
+  if payload.analysis_type == "complaint_draft":
+    case_row = await require_case(db, t, user["id"], case_id)
+    if case_row["case_type"] != "civil":
+      fail(422, "civil_case_required", "起诉状模板仅适用于民事案件")
+  if payload.material_id:
+    from app.services.materials import permissions, require_material
+    case_row = await require_case(db, t, user["id"], case_id)
+    material = await require_material(db, t, case_id, payload.material_id)
+    access = await permissions(db, t, user["id"], case_row, material)
+    if not access["can_edit"] and not access["can_review"]:
+      fail(403, "material_analysis_forbidden", "没有发起材料分析的权限")
+    job_payload = {"material_id": material["id"], "material_revision": material["revision"]}
   analysis_id = (await db.execute(insert(t.case_analyses).values(case_id=case_id,
     analysis_type=payload.analysis_type, created_by=user["id"]).returning(t.case_analyses.c.id))).scalar_one()
   job_id = (await db.execute(insert(t.async_jobs).values(job_type="case_analysis", resource_type="analysis",
-    resource_id=analysis_id, idempotency_key=key).returning(t.async_jobs.c.id))).scalar_one()
-  await db.execute(update(t.cases).where(t.cases.c.id == case_id).values(analysis_status="analyzing"))
+    resource_id=analysis_id, idempotency_key=key, payload=job_payload).returning(t.async_jobs.c.id))).scalar_one()
+  if payload.material_id:
+    await db.execute(update(t.evidence_items).where(t.evidence_items.c.id == payload.material_id)
+      .values(ai_analysis_id=analysis_id))
+  from app.services.case_status import refresh_analysis_status
+  await refresh_analysis_status(db, t, case_id, payload.analysis_type)
   await db.commit()
   return {"analysis_id": analysis_id, "job_id": job_id, "status": "pending"}
 
@@ -53,13 +71,14 @@ async def get(case_id: int, analysis_id: int, request: Request, db: DB, user: Us
     t.doc_chunks.c.content.label("quote"), t.doc_chunks.c.page_no)
     .join(t.files, t.files.c.id == t.analysis_sources.c.file_id)
     .outerjoin(t.doc_chunks, t.doc_chunks.c.id == t.analysis_sources.c.chunk_id)
-    .where(t.analysis_sources.c.analysis_id == analysis_id, t.files.c.status == "available"))).mappings().all()
+    .where(t.analysis_sources.c.analysis_id == analysis_id, t.files.c.status == "available")
+    .order_by(t.analysis_sources.c.id))).mappings().all()
   return dict(row) | {"sources": [dict(source) for source in sources]}
 
 
 @router.post("/cases/{case_id}/analyses/{analysis_id}/cancel")
 async def cancel(case_id: int, analysis_id: int, request: Request, db: DB, user: User):
-  from app.services.case_status import refresh_case_status
+  from app.services.case_status import refresh_analysis_status
   t = request.app.state.db.t
   await require_case(db, t, user["id"], case_id)
   await db.execute(select(t.async_jobs.c.id).where(t.async_jobs.c.resource_type == "analysis",
@@ -76,6 +95,6 @@ async def cancel(case_id: int, analysis_id: int, request: Request, db: DB, user:
         status="cancelled", lease_token=None, lease_expires_at=None, finished_at=datetime.now(UTC)))
     await db.execute(update(t.case_analyses).where(t.case_analyses.c.id == analysis_id).values(
       status="cancelled", completed_at=datetime.now(UTC)))
-    await refresh_case_status(db, t, case_id)
+    await refresh_analysis_status(db, t, case_id, row["analysis_type"])
   await db.commit()
   return {"analysis_id": analysis_id, "status": "cancelled" if row["status"] in {"pending", "running"} else row["status"]}

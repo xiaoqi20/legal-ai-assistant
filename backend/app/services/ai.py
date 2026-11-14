@@ -52,10 +52,12 @@ class AI:
         # Only final answer content leaves this adapter; reasoning_content is never exposed.
         yield chunk
 
-  async def complete_json(self, messages):
+  async def complete_json(self, messages, temperature: float | None = None):
+    kwargs = {} if temperature is None else {"temperature": temperature}
     return await self.chat.chat.completions.create(
       model=self.settings.deepseek_model, messages=messages,
-      response_format={"type": "json_object"}, max_tokens=self.settings.max_output_tokens,
+      response_format={"type": "json_object"}, max_tokens=self.settings.structured_output_tokens,
+      extra_body={"thinking": {"type": "disabled"}}, **kwargs,
     )
 
   async def close(self):

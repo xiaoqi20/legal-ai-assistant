@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onLoad } from "@dcloudio/uni-app";
+import { onLoad, onShow } from "@dcloudio/uni-app";
 import { computed, ref } from "vue";
 import FileBadge from "@/components/FileBadge.vue";
 import FloatingReturn from "./components/FloatingReturn.vue";
@@ -13,7 +13,7 @@ import {
 import type { CaseMaterial, EvidenceRequirement } from "@/types/case";
 
 const caseId = ref(1);
-const evidenceId = ref(1);
+const evidenceId = ref(0);
 const caseTitle = ref("");
 const requirement = ref<EvidenceRequirement | null>(null);
 const materials = ref<CaseMaterial[]>([]);
@@ -25,7 +25,7 @@ const loading = ref(true);
 
 const filtered = computed(() =>
   materials.value.filter(
-    (item) => item.requirement_id === evidenceId.value && item.category === activeTab.value,
+    (item) => (!evidenceId.value || item.requirement_id === evidenceId.value) && item.category === activeTab.value,
   ),
 );
 
@@ -39,8 +39,10 @@ async function load() {
     ]);
     caseTitle.value = detail.title;
     requirement.value =
-      requirements.find((item) => item.id === evidenceId.value) ?? requirements[0] ?? null;
+      requirements.find((item) => item.id === evidenceId.value) ?? null;
     materials.value = list;
+  } catch (cause) {
+    uni.showToast({ title: cause instanceof Error ? cause.message : "材料加载失败", icon: "none" });
   } finally {
     loading.value = false;
   }
@@ -48,9 +50,12 @@ async function load() {
 
 onLoad((options) => {
   caseId.value = Number(options?.id || 1);
-  evidenceId.value = Number(options?.eid || 1);
-  load();
+  evidenceId.value = Number(options?.eid || 0);
 });
+onShow(() => { void load(); });
+function createMaterial() {
+  uni.navigateTo({ url: `/pages/case/material-edit?id=${caseId.value}${evidenceId.value ? `&eid=${evidenceId.value}` : ''}` });
+}
 
 function statusMeta(item: CaseMaterial) {
   return MATERIAL_STATUS_META[item.status];
@@ -74,6 +79,7 @@ function openMaterial(item: CaseMaterial) {
       <view class="head">
         <text class="case-name">{{ caseTitle }}</text>
         <text class="evidence-name">{{ requirement?.title }}</text>
+        <button size="mini" @click="createMaterial">新增材料</button>
       </view>
 
       <view v-if="requirement" class="info surface-card">

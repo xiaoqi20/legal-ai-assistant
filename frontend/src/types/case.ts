@@ -14,6 +14,8 @@ export type CaseAnalysisStatus =
   | "analyzed"
   | "failed";
 
+export type WinRateStatus = CaseAnalysisStatus | "not_applicable";
+
 export type EvidenceUploadStatus = "not_uploaded" | "partial" | "completed";
 
 export type CaseStatus = "active" | "archived" | "deleted";
@@ -87,6 +89,8 @@ export interface CaseSummary {
   evidence_label?: string;
   win_rate: number | null;
   win_rate_updated_at: string | null;
+  win_rate_status?: WinRateStatus;
+  win_rate_analysis_id?: number | null;
   status: CaseStatus;
   created_at: string;
   updated_at: string;
@@ -104,6 +108,9 @@ export interface CaseSummary {
 }
 
 export type MaterialStatus =
+  | "draft"
+  | "withdrawn"
+  | "lawyer_approved"
   | "ai_passed"
   | "ai_analyzing"
   | "lawyer_pending"
@@ -123,12 +130,67 @@ export type DocumentCategoryLabel =
   | "其他";
 
 export type CaseAnalysisType =
+  | "win_rate"
+  | "material_review"
+  | "complaint_draft"
+  | "evidence_catalog"
   | "case_summary"
   | "timeline"
   | "judicial_reasoning"
   | "dispute_focus"
   | "evidence_chain"
   | "evidence_list";
+
+export interface WinRateElementItem {
+  key: string;
+  label: string;
+  scope_claim_index?: number | null;
+  grade: "proven" | "corroborated" | "weak" | "missing" | "rebutted";
+  grade_label: string;
+  certainty: number;
+  citation_ranks: number[];
+  trust: number;
+  required?: boolean;
+  summary: string;
+}
+
+export interface WinRateDefeaterItem {
+  key: string;
+  label: string;
+  presence: "confirmed" | "suspected" | "absent";
+  lethality: number;
+  impact: number;
+  citation_ranks: number[];
+  summary: string;
+}
+
+export interface WinRateClaimItem {
+  index: number;
+  title: string;
+  amount_yuan: number | null;
+  weight: number;
+  support_score: number;
+}
+
+export interface WinRateBreakdown {
+  applicable: boolean;
+  win_rate: number | null;
+  metric_kind: "uncalibrated_rubric" | "calibrated_empirical";
+  metric_label: string;
+  stance?: "plaintiff_side" | "defendant_side";
+  cause_code?: string;
+  cause_label?: string;
+  reason_code?: string;
+  reason_message?: string;
+  claims: WinRateClaimItem[];
+  elements: WinRateElementItem[];
+  defeaters: WinRateDefeaterItem[];
+  positive_factors: string[];
+  negative_factors: string[];
+  missing_evidence: string[];
+  limitations: string;
+  disclaimer: string;
+}
 
 export type AnalysisRecordStatus =
   | "pending"
@@ -145,6 +207,7 @@ export interface CaseAnalysisRecord {
   content: Record<string, unknown> | null;
   error_message: string | null;
   created_at: string;
+  sources?: { id: number; file_id: number; original_name: string; page_no: number | null }[];
 }
 
 export interface EvidenceRequirement {
@@ -179,6 +242,11 @@ export interface CaseMaterial {
   description: string;
   contact: string;
   files: MaterialFile[];
+  purpose?: string;
+  category_code?: string;
+  revision?: number;
+  ai_analysis_id?: number | null;
+  permissions?: { can_edit: boolean; can_review: boolean };
 }
 
 export interface CaseDocument {

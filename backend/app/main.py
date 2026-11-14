@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 from starlette.exceptions import HTTPException
 
-from app.api import analyses, auth, cases, conversations, files
+from app.api import analyses, auth, cases, conversations, drafts, files, materials
 from app.config import Settings, get_settings
 from app.db import Database
 from app.services.ai import AI
@@ -32,7 +32,7 @@ def create_app(settings: Settings | None = None):
       await app.state.db.connect()
       async with app.state.db.engine.connect() as conn:
         version = (await conn.execute(text("SELECT version_num FROM public.alembic_version"))).scalar_one()
-        if version != "0006":
+        if version != "0008":
           raise RuntimeError("数据库迁移版本不匹配，请运行 alembic upgrade head")
       yield
     finally:
@@ -90,7 +90,8 @@ def create_app(settings: Settings | None = None):
                               and settings.ocr_access_key_secret.get_secret_value())}
 
   for router, tag in [(auth.router, "auth"), (cases.router, "cases"),
-                       (files.router, "files"), (conversations.router, "conversations"), (analyses.router, "analyses")]:
+                       (files.router, "files"), (conversations.router, "conversations"),
+                       (materials.router, "materials"), (drafts.router, "drafts"), (analyses.router, "analyses")]:
     app.include_router(router, prefix="/api/v1", tags=[tag])
   return app
 

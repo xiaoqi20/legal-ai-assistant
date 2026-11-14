@@ -444,7 +444,15 @@ function openMic() {
                   : "未上传"
             }}
           </text>
-          <text>胜诉率：{{ caseDetail.win_rate == null ? "—" : `${caseDetail.win_rate}%` }}</text>
+          <text>
+            胜诉率：{{
+              caseDetail.win_rate_status === "not_applicable"
+                ? "暂不适用"
+                : caseDetail.win_rate == null
+                  ? "—"
+                  : `${caseDetail.win_rate}%`
+            }}
+          </text>
           <text>案件程序：{{ caseProcedure }}</text>
           <text>分析状态：{{ caseStatus?.label }}</text>
         </view>

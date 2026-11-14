@@ -14,6 +14,7 @@ import type {
   EvidenceSummaryData,
   MaterialFile,
   MaterialStatus,
+  WinRateBreakdown,
 } from "@/types/case";
 import { fetchMockCases } from "./mock/cases";
 import { USE_MOCK, createClientId, request } from "./request";
@@ -36,6 +37,10 @@ interface BackendMaterialRow {
   contact_phone_masked?: string | null;
   created_at: string;
   files?: { id: number; original_name: string; mime_type: string }[];
+  purpose?: string;
+  revision?: number;
+  ai_analysis_id?: number | null;
+  permissions?: { can_edit: boolean; can_review: boolean };
 }
 
 interface BackendDocumentRow {
@@ -91,6 +96,11 @@ function mapMaterial(row: BackendMaterialRow): CaseMaterial {
     description: row.description || "暂无材料说明",
     contact: row.contact_phone_masked || "—",
     files,
+    purpose: row.purpose || "",
+    category_code: row.category,
+    revision: row.revision,
+    ai_analysis_id: row.ai_analysis_id,
+    permissions: row.permissions,
   };
 }
 
@@ -670,4 +680,106 @@ export async function fetchEvidenceSummary(
 ): Promise<EvidenceSummaryData> {
   const bundle = await fetchEvidenceSummaryBundle(caseId);
   return bundle.data || { plaintiff: [], defendant: [], analysis: "" };
+}
+
+export function parseWinRateDetail(
+  record: CaseAnalysisRecord | null,
+): WinRateBreakdown | null {
+  if (!record || record.analysis_type !== "win_rate" || !record.content) {
+    return null;
+  }
+  const c = record.content;
+  if (typeof c.applicable !== "boolean") return null;
+  return {
+    applicable: c.applicable,
+    win_rate: typeof c.win_rate === "number" ? c.win_rate : null,
+    metric_kind:
+      c.metric_kind === "calibrated_empirical"
+        ? "calibrated_empirical"
+        : "uncalibrated_rubric",
+    metric_label:
+      typeof c.metric_label === "string"
+        ? c.metric_label
+        : "AI 要件支撑度预估（未经判例校准）",
+    stance:
+      c.stance === "plaintiff_side" || c.stance === "defendant_side"
+        ? c.stance
+        : undefined,
+    cause_code: typeof c.cause_code === "string" ? c.cause_code : undefined,
+    cause_label: typeof c.cause_label === "string" ? c.cause_label : undefined,
+    reason_code: typeof c.reason_code === "string" ? c.reason_code : undefined,
+    reason_message:
+      typeof c.reason_message === "string" ? c.reason_message : undefined,
+    claims: Array.isArray(c.claims) ? (c.claims as WinRateBreakdown["claims"]) : [],
+    elements: Array.isArray(c.elements)
+      ? (c.elements as WinRateBreakdown["elements"])
+      : [],
+    defeaters: Array.isArray(c.defeaters)
+      ? (c.defeaters as WinRateBreakdown["defeaters"])
+      : [],
+    positive_factors: Array.isArray(c.positive_factors)
+      ? (c.positive_factors as string[])
+      : [],
+    negative_factors: Array.isArray(c.negative_factors)
+      ? (c.negative_factors as string[])
+      : [],
+    missing_evidence: Array.isArray(c.missing_evidence)
+      ? (c.missing_evidence as string[])
+      : [],
+    limitations: typeof c.limitations === "string" ? c.limitations : "",
+    disclaimer:
+      typeof c.disclaimer === "string"
+        ? c.disclaimer
+        : "当前结果为基于案件证据与法定要件的结构化支撑度测算，未经历史判例统计校准，仅供办案风险研判参考。",
+  };
+}
+
+export async function fetchWinRateDetail(
+  caseId: number,
+  analysisId?: number | null,
+): Promise<WinRateBreakdown | null> {
+  if (USE_MOCK) {
+    await delay();
+    if (caseId !== 1) return null;
+    return {
+      applicable: true,
+      win_rate: 80,
+      metric_kind: "uncalibrated_rubric",
+      metric_label: "AI 要件支撑度预估（未经判例校准）",
+      stance: "plaintiff_side",
+      cause_label: "民间借贷纠纷（示例数据）",
+      claims: [
+        {
+          index: 0,
+          title: "补偿及本金给付核心诉求",
+          amount_yuan: null,
+          weight: 1,
+          support_score: 80,
+        },
+      ],
+      elements: [
+        {
+          key: "statutory_basis",
+          label: "请求权基础与法律关系",
+          grade: "proven",
+          grade_label: "充分印证",
+          certainty: 0.92,
+          citation_ranks: [1],
+          trust: 1,
+          summary: "演示模式下展示结构化要件测算示例。",
+        },
+      ],
+      defeaters: [],
+      positive_factors: ["核心书证链条完整"],
+      negative_factors: [],
+      missing_evidence: [],
+      limitations: "当前为本地演示模式示例数据，非真实后台测算结果。",
+      disclaimer:
+        "当前结果为基于案件证据与法定要件的结构化支撑度测算，未经历史判例统计校准，仅供办案风险研判参考。",
+    };
+  }
+  const record = analysisId
+    ? await fetchCaseAnalysisRecord(caseId, analysisId)
+    : latestByType(await fetchCaseAnalyses(caseId), "win_rate");
+  return parseWinRateDetail(record);
 }

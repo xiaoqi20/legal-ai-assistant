@@ -73,6 +73,14 @@
       }
     },
     {
+      "path": "pages/case/material-edit",
+      "style": { "navigationStyle": "custom", "navigationBarTitleText": "编辑材料" }
+    },
+    {
+      "path": "pages/case/drafts",
+      "style": { "navigationStyle": "custom", "navigationBarTitleText": "法律文书草稿" }
+    },
+    {
       "path": "pages/case/material-detail",
       "style": {
         "navigationStyle": "custom",

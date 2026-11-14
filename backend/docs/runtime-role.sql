@@ -4,6 +4,7 @@ CREATE ROLE law_app LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
 GRANT USAGE ON SCHEMA law, public TO law_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA law TO law_app;
 REVOKE UPDATE, DELETE ON law.audit_logs FROM law_app;
+REVOKE UPDATE, DELETE ON law.material_events, law.document_draft_revisions FROM law_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA law TO law_app;
 GRANT SELECT ON public.alembic_version TO law_app;
 -- 后续迁移新建对象后，需要同一迁移所有者补齐相应授权。

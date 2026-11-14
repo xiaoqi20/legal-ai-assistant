@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { onLoad } from "@dcloudio/uni-app";
+import { onLoad, onShow } from "@dcloudio/uni-app";
 import { computed, ref } from "vue";
 import FileBadge from "@/components/FileBadge.vue";
 import FilePreviewModal from "./components/FilePreviewModal.vue";
 import FloatingReturn from "./components/FloatingReturn.vue";
+import MaterialWorkflow from "./components/MaterialWorkflow.vue";
 import PageNav from "@/components/PageNav.vue";
 import { MATERIAL_STATUS_META } from "@/constants/case";
 import { fetchMaterial } from "@/services/caseContent";
@@ -12,6 +13,7 @@ import { USE_MOCK } from "@/services/request";
 import type { CaseMaterial, MaterialFile } from "@/types/case";
 
 const caseId = ref(1);
+const materialId = ref(0);
 const material = ref<CaseMaterial | null>(null);
 const loading = ref(true);
 const previewFile = ref<MaterialFile | null>(null);
@@ -35,8 +37,9 @@ async function load(id: number) {
 
 onLoad((options) => {
   caseId.value = Number(options?.id || 1);
-  load(Number(options?.mid || 1));
+  materialId.value = Number(options?.mid || 1);
 });
+onShow(() => { if (materialId.value) void load(materialId.value); });
 
 async function preview(file: MaterialFile) {
   if (!USE_MOCK && file.id) {
@@ -116,6 +119,7 @@ async function preview(file: MaterialFile) {
           </view>
         </view>
 
+        <MaterialWorkflow v-if="!USE_MOCK" :material="material" @changed="load(materialId)" />
         <view
           v-if="
             (material.status === 'ai_failed' ||

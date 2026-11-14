@@ -8,6 +8,7 @@ import type {
   DraftCaseType,
   EvidenceUploadStatus,
   MaterialStatus,
+  WinRateStatus,
 } from "@/types/case";
 
 type StatusTone = "green" | "pink" | "lavender" | "red";
@@ -20,6 +21,17 @@ export const ANALYSIS_STATUS_META: Record<
   not_analyzed: { label: "未分析", tone: "pink" },
   analyzing: { label: "分析中", tone: "lavender" },
   failed: { label: "分析失败", tone: "red" },
+};
+
+export const WIN_RATE_STATUS_META: Record<
+  WinRateStatus,
+  { label: string; tone: StatusTone }
+> = {
+  analyzed: { label: "已评估", tone: "green" },
+  not_analyzed: { label: "未评估", tone: "pink" },
+  analyzing: { label: "测算中", tone: "lavender" },
+  failed: { label: "测算失败", tone: "red" },
+  not_applicable: { label: "暂不适用", tone: "pink" },
 };
 
 export const EVIDENCE_STATUS_META: Record<
@@ -44,6 +56,9 @@ export const MATERIAL_STATUS_META: Record<
   MaterialStatus,
   { label: string; tone: "blue" | "green" | "red" }
 > = {
+  draft: { label: "草稿", tone: "blue" },
+  withdrawn: { label: "已撤回", tone: "blue" },
+  lawyer_approved: { label: "律师已通过", tone: "green" },
   ai_passed: { label: "AI分析通过", tone: "blue" },
   ai_analyzing: { label: "AI分析中", tone: "green" },
   lawyer_pending: { label: "律师待审核", tone: "blue" },
@@ -70,6 +85,10 @@ export const DOCUMENT_CATEGORY_LABELS: Record<
 };
 
 export const ANALYSIS_TYPE_LABELS: Record<CaseAnalysisType, string> = {
+  win_rate: "胜诉率测算",
+  material_review: "材料辅助分析",
+  complaint_draft: "民事起诉状草稿",
+  evidence_catalog: "证据目录草稿",
   case_summary: "案情摘要",
   timeline: "案情时间轴",
   judicial_reasoning: "司法推理",

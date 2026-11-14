@@ -20,7 +20,7 @@ class FakeAI:
   async def close(self):
     pass
 
-  async def complete_json(self, messages):
+  async def complete_json(self, messages, **_kwargs):
     self.last_messages = messages
     content = {"parties": [{"label": "原告", "value": "合成甲"}],
       "facts": ["合成合同事实 [1]"], "requests": [], "limitations": "仅依据召回片段，待人工核验"}

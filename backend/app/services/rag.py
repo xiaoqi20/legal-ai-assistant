@@ -3,7 +3,7 @@ from sqlalchemy import and_, func, select
 from app.access import case_scope
 
 
-async def retrieve(db, t, ai, settings, user_id, case_id, query):
+async def retrieve(db, t, ai, settings, user_id, case_id, query, file_ids=None):
   vector = (await ai.embed([query]))[0]
   distance = t.doc_chunks.c.embedding.cosine_distance(vector)
   accessible = and_(
@@ -11,6 +11,8 @@ async def retrieve(db, t, ai, settings, user_id, case_id, query):
     t.files.c.status == "available", t.doc_chunks.c.embedding.is_not(None),
     t.doc_chunks.c.embedding_model == settings.embedding_model,
   )
+  if file_ids is not None:
+    accessible = and_(accessible, t.files.c.id.in_(file_ids))
   source = t.doc_chunks.join(t.files, t.files.c.id == t.doc_chunks.c.file_id).join(
     t.cases, t.cases.c.id == t.doc_chunks.c.case_id
   )

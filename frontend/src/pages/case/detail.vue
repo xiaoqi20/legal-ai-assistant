@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onLoad } from "@dcloudio/uni-app";
+import { onHide, onLoad, onShow, onUnload } from "@dcloudio/uni-app";
 import { computed, ref } from "vue";
 import ComposerBar from "@/components/ComposerBar.vue";
 import PageNav from "@/components/PageNav.vue";
@@ -9,16 +9,25 @@ import {
   EVIDENCE_STATUS_META,
   PROCEDURE_LABELS,
 } from "@/constants/case";
-import { fetchCase } from "@/services/caseContent";
+import {
+  fetchCase,
+  fetchWinRateDetail,
+  triggerCaseAnalysis,
+} from "@/services/caseContent";
 import { USE_MOCK } from "@/services/request";
 import { useCaseCreateStore } from "@/stores/caseCreate";
-import type { CaseSummary } from "@/types/case";
+import type { CaseSummary, WinRateBreakdown, WinRateStatus } from "@/types/case";
 
 const caseCreate = useCaseCreateStore();
 const caseId = ref(1);
 const detail = ref<CaseSummary | null>(null);
+const winRateDetail = ref<WinRateBreakdown | null>(null);
 const loading = ref(true);
+const evaluatingWinRate = ref(false);
+const showWinRateModal = ref(false);
 const draft = ref("");
+let pollTimer: ReturnType<typeof setInterval> | null = null;
+let pollAttempts = 0;
 
 const status = computed(() =>
   detail.value ? ANALYSIS_STATUS_META[detail.value.analysis_status] : null,
@@ -38,8 +47,51 @@ const procedure = computed(() =>
       "其他"
     : "",
 );
+const effectiveWinRateStatus = computed<WinRateStatus>(() => {
+  if (!detail.value) return "not_analyzed";
+  return detail.value.win_rate_status ?? detail.value.analysis_status;
+});
+const formattedWinRateTime = computed(() => {
+  const raw = detail.value?.win_rate_updated_at;
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return "";
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+});
+const activeDefeaters = computed(() =>
+  (winRateDetail.value?.defeaters ?? []).filter((d) => d.presence !== "absent"),
+);
+const canShowBreakdown = computed(
+  () =>
+    effectiveWinRateStatus.value === "analyzed" ||
+    effectiveWinRateStatus.value === "not_applicable" ||
+    detail.value?.win_rate_analysis_id != null ||
+    winRateDetail.value != null,
+);
+const winRateActionLabel = computed(() => {
+  const s = effectiveWinRateStatus.value;
+  if (evaluatingWinRate.value || s === "analyzing") return "测算中…";
+  if (s === "analyzed" || s === "not_applicable") return "重新评估";
+  return "AI 评估胜诉率";
+});
+const winRateHint = computed(() => {
+  const s = effectiveWinRateStatus.value;
+  if (s === "analyzed") {
+    const label = winRateDetail.value?.metric_label || "AI 要件支撑度预估（未经判例校准）";
+    return formattedWinRateTime.value ? `${label} · ${formattedWinRateTime.value}` : label;
+  }
+  if (s === "not_applicable") {
+    return winRateDetail.value?.reason_message || "当前案件暂不适用胜诉率测算";
+  }
+  if (s === "analyzing") return "正在基于材料与法定要件进行结构化测算…";
+  if (s === "failed") return "上次测算失败，可检查材料后重新评估";
+  return "基于诉讼请求与已解析证据进行法定要件支撑度测算";
+});
 
 const tools = [
+  { key: "materials", title: "材料与律师复核", desc: "新增材料、提交及查看复核", icon: "/static/images/icons/evidence.png" },
+  { key: "drafts", title: "法律文书草稿", desc: "生成、编辑和导出文书", icon: "/static/images/icons/documents.png" },
   {
     key: "chain",
     title: "AI证据链分析",
@@ -66,6 +118,54 @@ const tools = [
   },
 ];
 
+function stopPoll() {
+  if (pollTimer) {
+    clearInterval(pollTimer);
+    pollTimer = null;
+  }
+  pollAttempts = 0;
+}
+
+function startPoll() {
+  if (USE_MOCK || pollTimer) return;
+  pollAttempts = 0;
+  pollTimer = setInterval(() => {
+    pollAttempts += 1;
+    if (pollAttempts > 30) {
+      stopPoll();
+      return;
+    }
+    void refreshSilent();
+  }, 2000);
+}
+
+async function loadWinRateBreakdown() {
+  if (!detail.value || detail.value.is_local) return;
+  const st = detail.value.win_rate_status ?? detail.value.analysis_status;
+  if (st !== "analyzed" && st !== "not_applicable" && !detail.value.win_rate_analysis_id) {
+    winRateDetail.value = null;
+    return;
+  }
+  try {
+    winRateDetail.value = await fetchWinRateDetail(caseId.value, detail.value.win_rate_analysis_id);
+  } catch {
+    // Breakdown stays optional if detail fetch temporarily fails.
+  }
+}
+
+async function refreshSilent() {
+  try {
+    const fresh = await fetchCase(caseId.value);
+    detail.value = fresh;
+    if (fresh.win_rate_status !== "analyzing") {
+      stopPoll();
+      await loadWinRateBreakdown();
+    }
+  } catch {
+    // Keep polling quietly until limit.
+  }
+}
+
 async function load() {
   loading.value = true;
   try {
@@ -73,6 +173,12 @@ async function load() {
       ? caseCreate.findLocalCase(caseId.value)
       : undefined;
     detail.value = localFound ?? (await fetchCase(caseId.value));
+    await loadWinRateBreakdown();
+    if (!USE_MOCK && detail.value?.win_rate_status === "analyzing") {
+      startPoll();
+    } else {
+      stopPoll();
+    }
   } catch {
     uni.showToast({ title: "案件加载失败", icon: "none" });
   } finally {
@@ -80,10 +186,59 @@ async function load() {
   }
 }
 
+async function evaluateWinRate() {
+  if (!detail.value) return;
+  if (detail.value.is_local) {
+    uni.showToast({ title: "本地新建案件暂未同步服务端测算", icon: "none" });
+    return;
+  }
+  if (USE_MOCK) {
+    await loadWinRateBreakdown();
+    if (winRateDetail.value) {
+      showWinRateModal.value = true;
+    } else {
+      uni.showToast({ title: "演示模式下仅案件 #1 含示例依据", icon: "none" });
+    }
+    return;
+  }
+  if (evaluatingWinRate.value || effectiveWinRateStatus.value === "analyzing") {
+    uni.showToast({ title: "胜诉率正在测算中，请稍候", icon: "none" });
+    return;
+  }
+  evaluatingWinRate.value = true;
+  try {
+    await triggerCaseAnalysis(caseId.value, "win_rate");
+    detail.value = {
+      ...detail.value,
+      win_rate_status: "analyzing",
+    };
+    winRateDetail.value = null;
+    startPoll();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "发起胜诉率测算失败";
+    uni.showToast({ title: msg, icon: "none" });
+  } finally {
+    evaluatingWinRate.value = false;
+  }
+}
+
+async function openWinRateModal() {
+  if (!winRateDetail.value && detail.value && !detail.value.is_local) {
+    await loadWinRateBreakdown();
+  }
+  if (!winRateDetail.value) {
+    uni.showToast({ title: "暂无测算详情，请先点击评估", icon: "none" });
+    return;
+  }
+  showWinRateModal.value = true;
+}
+
 onLoad((options) => {
   caseId.value = Number(options?.id || 1);
-  load();
 });
+onShow(() => { void load(); });
+onHide(() => { stopPoll(); });
+onUnload(() => { stopPoll(); });
 
 function openTool(key: string) {
   if (detail.value?.is_local) {
@@ -95,6 +250,8 @@ function openTool(key: string) {
   }
   const id = caseId.value;
   const routes: Record<string, string> = {
+    materials: `/pages/case/materials?id=${id}`,
+    drafts: `/pages/case/drafts?id=${id}`,
     chain: `/pages/case/evidence?id=${id}`,
     analysis: `/pages/case/analysis?id=${id}`,
     docs: `/pages/case/documents?id=${id}`,
@@ -133,8 +290,28 @@ function openMic() {
             <WinRateDonut
               large
               :status="detail.analysis_status"
+              :win-rate-status="detail.win_rate_status"
               :win-rate="detail.win_rate"
             />
+          </view>
+          <view v-if="!detail.is_local" class="win-rate-actions">
+            <view class="wr-btn-row">
+              <button
+                class="wr-btn"
+                :class="{ 'wr-btn--disabled': evaluatingWinRate || effectiveWinRateStatus === 'analyzing' }"
+                @click="evaluateWinRate"
+              >
+                {{ winRateActionLabel }}
+              </button>
+              <button
+                v-if="canShowBreakdown"
+                class="wr-btn wr-btn--ghost"
+                @click="openWinRateModal"
+              >
+                查看测算依据
+              </button>
+            </view>
+            <text class="wr-hint">{{ winRateHint }}</text>
           </view>
           <view class="metrics">
             <view class="metric">
@@ -193,6 +370,100 @@ function openMic() {
       @toggle-attach="openMic"
       @mic="openMic"
     />
+
+    <view
+      v-if="showWinRateModal && winRateDetail"
+      class="wr-overlay"
+      @click="showWinRateModal = false"
+    >
+      <view class="wr-modal" @click.stop>
+        <view class="wr-head">
+          <text class="wr-head-title">胜诉率测算依据</text>
+          <text class="wr-head-close" @click="showWinRateModal = false">✕</text>
+        </view>
+        <scroll-view scroll-y class="wr-scroll">
+          <view class="wr-summary">
+            <view class="wr-summary-top">
+              <text class="wr-badge">{{ winRateDetail.metric_label }}</text>
+              <text v-if="winRateDetail.cause_label" class="wr-meta">
+                {{ winRateDetail.cause_label }}
+                {{ winRateDetail.stance === 'defendant_side' ? '· 被告/被申请人方' : winRateDetail.stance === 'plaintiff_side' ? '· 原告/申请人方' : '' }}
+              </text>
+            </view>
+            <text v-if="winRateDetail.applicable && winRateDetail.win_rate != null" class="wr-score">
+              {{ winRateDetail.win_rate }}%
+            </text>
+            <text v-else class="wr-unapplicable">
+              暂不适用：{{ winRateDetail.reason_message }}
+            </text>
+          </view>
+
+          <view v-if="winRateDetail.claims.length" class="wr-sec">
+            <text class="wr-sec-title">诉求分项</text>
+            <view v-for="c in winRateDetail.claims" :key="c.index" class="wr-item">
+              <view class="wr-item-head">
+                <text class="wr-item-title">{{ c.title }}</text>
+                <text class="wr-tag wr-tag--blue">{{ c.support_score }}%（权重 {{ Math.round(c.weight * 100) }}%）</text>
+              </view>
+            </view>
+          </view>
+
+          <view v-if="winRateDetail.elements.length" class="wr-sec">
+            <text class="wr-sec-title">法定证明要件核验</text>
+            <view v-for="el in winRateDetail.elements" :key="`${el.key}-${el.scope_claim_index ?? 'all'}`" class="wr-item">
+              <view class="wr-item-head">
+                <text class="wr-item-title">{{ el.label }}</text>
+                <text
+                  class="wr-tag"
+                  :class="{
+                    'wr-tag--green': el.grade === 'proven',
+                    'wr-tag--blue': el.grade === 'corroborated',
+                    'wr-tag--warn': el.grade === 'weak',
+                    'wr-tag--danger': el.grade === 'missing' || el.grade === 'rebutted',
+                  }"
+                >
+                  {{ el.grade_label }}
+                </text>
+              </view>
+              <text class="wr-item-desc">{{ el.summary }}</text>
+            </view>
+          </view>
+
+          <view v-if="activeDefeaters.length" class="wr-sec">
+            <text class="wr-sec-title">抗辩与阻却风险</text>
+            <view v-for="df in activeDefeaters" :key="df.key" class="wr-item">
+              <view class="wr-item-head">
+                <text class="wr-item-title">{{ df.label }}</text>
+                <text class="wr-tag wr-tag--danger">
+                  {{ df.presence === 'confirmed' ? '明确风险' : '疑似风险' }}
+                </text>
+              </view>
+              <text class="wr-item-desc">{{ df.summary }}</text>
+            </view>
+          </view>
+
+          <view v-if="winRateDetail.positive_factors.length" class="wr-sec">
+            <text class="wr-sec-title">有利支撑要素</text>
+            <text v-for="(item, idx) in winRateDetail.positive_factors" :key="`p-${idx}`" class="wr-bullet">· {{ item }}</text>
+          </view>
+
+          <view v-if="winRateDetail.negative_factors.length" class="wr-sec">
+            <text class="wr-sec-title">不利与风险要素</text>
+            <text v-for="(item, idx) in winRateDetail.negative_factors" :key="`n-${idx}`" class="wr-bullet">· {{ item }}</text>
+          </view>
+
+          <view v-if="winRateDetail.missing_evidence.length" class="wr-sec">
+            <text class="wr-sec-title">待补强缺失证据</text>
+            <text v-for="(item, idx) in winRateDetail.missing_evidence" :key="`m-${idx}`" class="wr-bullet">· {{ item }}</text>
+          </view>
+
+          <view class="wr-disclaimer">
+            <text v-if="winRateDetail.limitations" class="wr-limit">测算范围：{{ winRateDetail.limitations }}</text>
+            <text class="wr-disc-text">{{ winRateDetail.disclaimer }}</text>
+          </view>
+        </scroll-view>
+      </view>
+    </view>
   </view>
 </template>
 
@@ -345,5 +616,241 @@ function openMic() {
 
 .tail {
   height: 40rpx;
+}
+
+.win-rate-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 24rpx;
+}
+
+.wr-btn-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16rpx;
+}
+
+.wr-btn {
+  margin: 0;
+  padding: 0 28rpx;
+  height: 60rpx;
+  line-height: 60rpx;
+  border-radius: 30rpx;
+  background: $brand;
+  color: #fff;
+  font-size: 24rpx;
+  font-weight: 600;
+  border: none;
+}
+
+.wr-btn::after {
+  border: none;
+}
+
+.wr-btn--ghost {
+  background: $brand-soft;
+  color: $brand;
+}
+
+.wr-btn--disabled {
+  background: #d5e0f7;
+  color: #fff;
+}
+
+.wr-hint {
+  margin-top: 12rpx;
+  padding: 0 12rpx;
+  text-align: center;
+  font-size: 21rpx;
+  line-height: 1.45;
+  color: $muted;
+}
+
+.wr-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  z-index: 90;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.wr-modal {
+  width: 100%;
+  max-height: 82vh;
+  background: #fff;
+  border-radius: 28rpx 28rpx 0 0;
+  padding: 28rpx 32rpx 36rpx;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.wr-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 20rpx;
+  border-bottom: 1rpx solid $line;
+}
+
+.wr-head-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #222;
+}
+
+.wr-head-close {
+  padding: 6rpx 12rpx;
+  font-size: 30rpx;
+  color: $muted;
+}
+
+.wr-scroll {
+  max-height: 68vh;
+  padding-top: 20rpx;
+}
+
+.wr-summary {
+  padding: 22rpx 24rpx;
+  border-radius: 18rpx;
+  background: $brand-soft;
+  margin-bottom: 20rpx;
+}
+
+.wr-summary-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.wr-badge {
+  font-size: 22rpx;
+  font-weight: 600;
+  color: $brand;
+}
+
+.wr-meta {
+  font-size: 22rpx;
+  color: $text-secondary;
+}
+
+.wr-score {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 48rpx;
+  font-weight: 700;
+  color: $brand;
+}
+
+.wr-unapplicable {
+  display: block;
+  margin-top: 10rpx;
+  font-size: 25rpx;
+  line-height: 1.5;
+  color: #b45309;
+}
+
+.wr-sec {
+  margin-bottom: 22rpx;
+}
+
+.wr-sec-title {
+  display: block;
+  margin-bottom: 12rpx;
+  font-size: 26rpx;
+  font-weight: 700;
+  color: #222;
+}
+
+.wr-item {
+  padding: 16rpx 18rpx;
+  border-radius: 14rpx;
+  background: #f8faff;
+  margin-bottom: 12rpx;
+}
+
+.wr-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12rpx;
+}
+
+.wr-item-title {
+  font-size: 25rpx;
+  font-weight: 600;
+  color: #222;
+  flex: 1;
+}
+
+.wr-item-desc {
+  display: block;
+  margin-top: 8rpx;
+  font-size: 23rpx;
+  line-height: 1.5;
+  color: $text-secondary;
+}
+
+.wr-tag {
+  flex: none;
+  padding: 4rpx 14rpx;
+  border-radius: 20rpx;
+  font-size: 20rpx;
+  font-weight: 600;
+}
+
+.wr-tag--green {
+  background: #e6f7ec;
+  color: #15803d;
+}
+
+.wr-tag--blue {
+  background: #e7f0ff;
+  color: $brand;
+}
+
+.wr-tag--warn {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.wr-tag--danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.wr-bullet {
+  display: block;
+  margin-bottom: 8rpx;
+  font-size: 24rpx;
+  line-height: 1.5;
+  color: $text-secondary;
+}
+
+.wr-disclaimer {
+  margin-top: 12rpx;
+  padding: 18rpx 20rpx;
+  border-radius: 14rpx;
+  background: #f5f7fb;
+}
+
+.wr-limit {
+  display: block;
+  margin-bottom: 8rpx;
+  font-size: 22rpx;
+  line-height: 1.5;
+  color: $text-secondary;
+}
+
+.wr-disc-text {
+  display: block;
+  font-size: 21rpx;
+  line-height: 1.5;
+  color: $muted;
 }
 </style>

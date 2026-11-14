@@ -1,31 +1,44 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import type { CaseAnalysisStatus } from "@/types/case";
+import type { CaseAnalysisStatus, WinRateStatus } from "@/types/case";
 
 const props = withDefaults(
   defineProps<{
     status: CaseAnalysisStatus;
+    winRateStatus?: WinRateStatus | null;
     winRate?: number | null;
     large?: boolean;
   }>(),
   {
+    winRateStatus: null,
     winRate: null,
     large: false,
   },
 );
 
+const effectiveStatus = computed<WinRateStatus>(
+  () => props.winRateStatus ?? props.status,
+);
+
+const numericWinRate = computed<number | null>(() => {
+  if (props.winRate == null) return null;
+  const parsed = Number(props.winRate);
+  return Number.isFinite(parsed) ? parsed : null;
+});
+
 const progress = computed(() => {
-  if (props.status === "analyzed" && props.winRate != null) {
-    return Math.min(Math.max(props.winRate, 0), 100) / 100;
+  if (effectiveStatus.value === "analyzed" && numericWinRate.value != null) {
+    return Math.min(Math.max(numericWinRate.value, 0), 100) / 100;
   }
-  if (props.status === "analyzing") return 0.72;
-  if (props.status === "not_analyzed") return 0.56;
+  if (effectiveStatus.value === "analyzing") return 0.72;
+  if (effectiveStatus.value === "not_analyzed") return 0.56;
   return 0.08;
 });
 
 const color = computed(() => {
-  if (props.status === "not_analyzed") return "#B9D7FF";
-  if (props.status === "failed") return "#F6AFAF";
+  if (effectiveStatus.value === "not_analyzed") return "#B9D7FF";
+  if (effectiveStatus.value === "failed") return "#F6AFAF";
+  if (effectiveStatus.value === "not_applicable") return "#D2D8E6";
   return "#2F6BFF";
 });
 
@@ -34,8 +47,11 @@ const ringStyle = computed(() => ({
 }));
 
 const valueText = computed(() => {
-  if (props.winRate == null) return "—";
-  return `${Math.round(props.winRate)}%`;
+  if (numericWinRate.value == null) return "—";
+  if (props.large && !Number.isInteger(numericWinRate.value)) {
+    return `${Number(numericWinRate.value.toFixed(1))}%`;
+  }
+  return `${Math.round(numericWinRate.value)}%`;
 });
 </script>
 
@@ -43,12 +59,29 @@ const valueText = computed(() => {
   <view class="donut" :class="{ 'donut--large': large }">
     <view class="ring" :style="ringStyle" />
     <view class="hole">
-      <text v-if="status === 'analyzed'" class="value">{{ valueText }}</text>
-      <text v-else-if="status === 'analyzing'" class="value value--small">
+      <text
+        v-if="effectiveStatus === 'analyzed' && numericWinRate != null"
+        class="value"
+      >
+        {{ valueText }}
+      </text>
+      <text
+        v-else-if="effectiveStatus === 'analyzing'"
+        class="value value--small"
+      >
         分析中
       </text>
-      <text v-else-if="status === 'failed'" class="value value--small">
+      <text
+        v-else-if="effectiveStatus === 'failed'"
+        class="value value--small"
+      >
         分析失败
+      </text>
+      <text
+        v-else-if="effectiveStatus === 'not_applicable'"
+        class="value value--small value--muted"
+      >
+        暂不适用
       </text>
       <text v-else class="value value--question">?</text>
       <text class="caption">胜诉率</text>
@@ -102,6 +135,10 @@ const valueText = computed(() => {
 .value--small {
   font-size: 24rpx;
   font-weight: 600;
+}
+
+.value--muted {
+  color: $muted;
 }
 
 .caption {

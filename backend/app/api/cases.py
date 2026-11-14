@@ -155,8 +155,9 @@ async def materials(case_id: int, request: Request, db: DB, user: User,
 @router.get("/cases/{case_id}/materials/{material_id}")
 async def material(case_id: int, material_id: int, request: Request, db: DB, user: User):
   from app.errors import fail
+  from app.services.materials import permissions
   t = request.app.state.db.t
-  await require_case(db, t, user["id"], case_id)
+  case_row = await require_case(db, t, user["id"], case_id)
   row = (await db.execute(select(t.evidence_items).where(t.evidence_items.c.id == material_id,
     t.evidence_items.c.case_id == case_id))).mappings().first()
   if not row:
@@ -165,7 +166,8 @@ async def material(case_id: int, material_id: int, request: Request, db: DB, use
     .join(t.evidence_item_files, t.evidence_item_files.c.file_id == t.files.c.id)
     .where(t.evidence_item_files.c.evidence_item_id == material_id, t.files.c.status == "available")
     .order_by(t.evidence_item_files.c.sort_order))).mappings().all()
-  return dict(row) | {"files": [dict(f) for f in files]}
+  return dict(row) | {"files": [dict(f) for f in files],
+    "permissions": await permissions(db, t, user["id"], case_row, row)}
 
 
 @router.get("/cases/{case_id}/documents")
@@ -226,24 +228,8 @@ async def delete_document(case_id: int, document_id: int, request: Request, db: 
     )
     .values(status="cancelled", lease_token=None, lease_expires_at=None, finished_at=now)
   )
-  has_docs = (await db.execute(
-    select(1)
-    .select_from(t.case_documents.join(t.files, t.files.c.id == t.case_documents.c.file_id))
-    .where(t.case_documents.c.case_id == case_id, t.files.c.status == "available")
-    .limit(1)
-  )).first()
-  has_evidence = (await db.execute(
-    select(1)
-    .select_from(t.evidence_item_files.join(t.files, t.files.c.id == t.evidence_item_files.c.file_id))
-    .where(t.evidence_item_files.c.case_id == case_id, t.files.c.status == "available")
-    .limit(1)
-  )).first()
-  if not has_docs and not has_evidence and case_row["evidence_upload_status"] != "not_uploaded":
-    await db.execute(
-      update(t.cases)
-      .where(t.cases.c.id == case_id)
-      .values(evidence_upload_status="not_uploaded")
-    )
+  from app.services.materials import refresh_evidence_status
+  await refresh_evidence_status(db, t, case_id)
   await db.execute(insert(t.audit_logs).values(
     user_id=user["id"],
     action="file.deleted",

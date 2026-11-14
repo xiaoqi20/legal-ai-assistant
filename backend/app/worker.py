@@ -13,7 +13,7 @@ from app.access import require_case
 from app.config import get_settings
 from app.db import Database
 from app.services.ai import AI
-from app.services.case_status import refresh_case_status
+from app.services.case_status import invalidate_win_rate, refresh_analysis_status
 from app.services.documents import parse_isolated, render_pdf_page_isolated, split
 from app.services.ocr import AlibabaOcr
 from app.services.storage import Storage
@@ -38,8 +38,9 @@ async def claim(database, settings):
         await db.execute(update(t.case_analyses).where(t.case_analyses.c.id == row["resource_id"]).values(
           status="failed" if row["attempts"] >= row["max_attempts"] else "pending", error_message="worker_lease_expired",
         ))
-        case_id = (await db.execute(select(t.case_analyses.c.case_id).where(t.case_analyses.c.id == row["resource_id"]))).scalar_one()
-        await refresh_case_status(db, t, case_id)
+        meta = (await db.execute(select(t.case_analyses.c.case_id, t.case_analyses.c.analysis_type)
+          .where(t.case_analyses.c.id == row["resource_id"]))).mappings().one()
+        await refresh_analysis_status(db, t, meta["case_id"], meta["analysis_type"])
       if row["resource_type"] == "file" and row["attempts"] >= row["max_attempts"]:
         file = (await db.execute(select(t.files).where(t.files.c.id == row["resource_id"]))).mappings().first()
         if file and file["status"] not in {"deleted", "quarantined"}:
@@ -200,6 +201,7 @@ async def process_job(database, ai, storage, settings, job, ocr):
       status="available", metadata={**current["metadata"], "parse_status": "succeeded", "chunk_count": len(chunks)},
     ))
     await db.execute(update(t.cases).where(t.cases.c.id == row["case_id"]).values(evidence_upload_status="partial"))
+    await invalidate_win_rate(db, t, row["case_id"])
     await db.execute(update(t.async_jobs).where(t.async_jobs.c.id == job["id"]).values(
       status="succeeded", finished_at=datetime.now(UTC), lease_token=None, lease_expires_at=None, last_error=None,
     ))
@@ -264,6 +266,7 @@ async def run_once(database, ai, storage, settings, ocr=None):
       "document_too_large", "too_many_chunks", "too_many_ocr_pages", "ocr_review_incomplete",
       "ocr_pages_incomplete",
       "docx_expansion_limit", "too_many_pages", "resource_unavailable", "no_case_material",
+      "material_changed",
     }
     async with database.sessions.begin() as db:
       owned = (await db.execute(update(t.async_jobs).where(
@@ -283,8 +286,9 @@ async def run_once(database, ai, storage, settings, ocr=None):
           await db.execute(update(t.case_analyses).where(t.case_analyses.c.id == job["resource_id"]).values(
             status="failed" if dead else "pending", error_message=code,
           ))
-          case_id = (await db.execute(select(t.case_analyses.c.case_id).where(t.case_analyses.c.id == job["resource_id"]))).scalar_one()
-          await refresh_case_status(db, t, case_id)
+          meta = (await db.execute(select(t.case_analyses.c.case_id, t.case_analyses.c.analysis_type)
+            .where(t.case_analyses.c.id == job["resource_id"]))).mappings().one()
+          await refresh_analysis_status(db, t, meta["case_id"], meta["analysis_type"])
     logger.warning("document_job_failed job_id=%s code=%s", job["id"], code)
   return True
 
