@@ -441,3 +441,58 @@ async def test_empty_analysis_fails_and_queued_analysis_can_cancel(app, client):
   cancelled = await client.post(f"/api/v1/cases/{case_id}/analyses/{queued['analysis_id']}/cancel", headers=headers)
   assert cancelled.json()["status"] == "cancelled"
   assert not await run_once(app.state.db, app.state.ai, app.state.storage, app.state.settings)
+
+
+async def test_soft_delete_case_document_enforces_permissions_and_excludes_rag(app, client):
+  headers, owner = await login(client)
+  member_headers, member = await login(client)
+  t = app.state.db.t
+  async with app.state.db.sessions.begin() as db:
+    org_id = (await db.execute(insert(t.organizations).values(name="合成律所", owner_user_id=owner).returning(t.organizations.c.id))).scalar_one()
+    await db.execute(insert(t.organization_members), [
+      {"org_id": org_id, "user_id": owner, "role": "owner", "status": "active"},
+      {"org_id": org_id, "user_id": member, "role": "member", "status": "active"},
+    ])
+    case_id = (await db.execute(insert(t.cases).values(title="合成文档删除案", owner_user_id=owner, org_id=org_id).returning(t.cases.c.id))).scalar_one()
+
+  data = b"Synthetic lease deposit breach evidence line."
+  app.state.storage.data = data
+  file_id = (await client.post("/api/v1/files/uploads", headers=headers, json={
+    "case_id": case_id, "filename": "synthetic_doc.txt", "size_bytes": len(data),
+    "mime_type": "text/plain", "sha256": hashlib.sha256(data).hexdigest(), "category": "other",
+  })).json()["file_id"]
+  await client.post(f"/api/v1/files/{file_id}/complete", headers=headers)
+  assert await run_once(app.state.db, app.state.ai, app.state.storage, app.state.settings)
+  assert await run_once(app.state.db, app.state.ai, app.state.storage, app.state.settings)
+
+  docs = (await client.get(f"/api/v1/cases/{case_id}/documents", headers=headers)).json()
+  assert len(docs) == 1
+  doc_id = docs[0]["id"]
+  assert (await client.get(f"/api/v1/cases/{case_id}", headers=headers)).json()["evidence_upload_status"] == "partial"
+
+  # Other org member cannot delete a document uploaded by owner
+  assert (await client.delete(f"/api/v1/cases/{case_id}/documents/{doc_id}", headers=member_headers)).status_code == 403
+
+  # Add a queued follow-up job to confirm deletion cancels pending work too
+  async with app.state.db.sessions.begin() as db:
+    pending_job_id = (await db.execute(insert(t.async_jobs).values(
+      job_type="document_index", resource_type="file", resource_id=file_id,
+      payload={"requested_by": owner}, idempotency_key=f"index:{file_id}:pending_delete",
+    ).returning(t.async_jobs.c.id))).scalar_one()
+
+  deleted = await client.delete(f"/api/v1/cases/{case_id}/documents/{doc_id}", headers=headers)
+  assert deleted.status_code == 204
+  assert (await client.delete(f"/api/v1/cases/{case_id}/documents/{doc_id}", headers=headers)).status_code == 404
+  assert (await client.get(f"/api/v1/cases/{case_id}/documents", headers=headers)).json() == []
+  assert (await client.get(f"/api/v1/cases/{case_id}", headers=headers)).json()["evidence_upload_status"] == "not_uploaded"
+  assert (await client.get(f"/api/v1/files/{file_id}", headers=headers)).status_code == 404
+  assert (await client.get(f"/api/v1/files/{file_id}/download", headers=headers)).status_code == 404
+  assert (await client.post(f"/api/v1/cases/{case_id}/retrieval", headers=headers, json={"query": "deposit"})).json()["sources"] == []
+
+  async with app.state.db.sessions() as db:
+    job_status = await db.scalar(select(t.async_jobs.c.status).where(t.async_jobs.c.id == pending_job_id))
+    assert job_status == "cancelled"
+    audit = (await db.execute(select(t.audit_logs).where(
+      t.audit_logs.c.action == "file.deleted", t.audit_logs.c.resource_id == file_id,
+    ))).mappings().one()
+    assert audit["user_id"] == owner and audit["metadata"]["document_id"] == doc_id

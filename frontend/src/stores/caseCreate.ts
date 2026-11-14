@@ -15,10 +15,13 @@ import type {
   HandlingIdentity,
 } from "@/types/case";
 import {
+  buildCaseCreatePayload,
   buildOrganizedDraft,
   createEmptyDraftForm,
   hasDraftContent,
 } from "@/utils/caseDraftOrganizer";
+import { createCase } from "@/services/cases";
+import { USE_MOCK } from "@/services/request";
 
 const LOCAL_CASES_STORAGE_KEY = "law_local_created_cases";
 
@@ -42,6 +45,7 @@ function saveStoredLocalCases(cases: CaseSummary[]) {
 export const useCaseCreateStore = defineStore("caseCreate", () => {
   const form = reactive<CaseDraftForm>(createEmptyDraftForm());
   const localCases = ref<CaseSummary[]>(loadStoredLocalCases());
+  const submitting = ref(false);
 
   const hasDraft = computed(() => hasDraftContent(form));
 
@@ -179,9 +183,31 @@ export const useCaseCreateStore = defineStore("caseCreate", () => {
     return localCases.value.find((item) => item.id === id);
   }
 
+  async function submitCase(): Promise<CaseSummary | null> {
+    if (submitting.value) return null;
+    if (form.summary.trim().length > 2000) {
+      throw new Error("案情摘要不能超过 2000 字");
+    }
+    if (form.claim.trim().length > 2000) {
+      throw new Error("核心诉求不能超过 2000 字");
+    }
+    if (USE_MOCK) {
+      return createLocalCase();
+    }
+    submitting.value = true;
+    try {
+      const created = await createCase(buildCaseCreatePayload(form));
+      clearDraft();
+      return created;
+    } finally {
+      submitting.value = false;
+    }
+  }
+
   return {
     form,
     localCases,
+    submitting,
     hasDraft,
     clearDraft,
     applyPresetSummary,
@@ -199,6 +225,7 @@ export const useCaseCreateStore = defineStore("caseCreate", () => {
     restoreRawSummary,
     organizeWithAi,
     createLocalCase,
+    submitCase,
     findLocalCase,
   };
 });

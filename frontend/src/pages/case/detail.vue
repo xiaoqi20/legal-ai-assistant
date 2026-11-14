@@ -10,6 +10,7 @@ import {
   PROCEDURE_LABELS,
 } from "@/constants/case";
 import { fetchCase } from "@/services/caseContent";
+import { USE_MOCK } from "@/services/request";
 import { useCaseCreateStore } from "@/stores/caseCreate";
 import type { CaseSummary } from "@/types/case";
 
@@ -68,7 +69,9 @@ const tools = [
 async function load() {
   loading.value = true;
   try {
-    const localFound = caseCreate.findLocalCase(caseId.value);
+    const localFound = USE_MOCK
+      ? caseCreate.findLocalCase(caseId.value)
+      : undefined;
     detail.value = localFound ?? (await fetchCase(caseId.value));
   } catch {
     uni.showToast({ title: "案件加载失败", icon: "none" });

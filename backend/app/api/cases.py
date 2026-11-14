@@ -1,7 +1,10 @@
+from datetime import UTC, datetime
+
 from fastapi import APIRouter, Query, Request
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, update
 
 from app.access import DB, User, case_scope, require_case
+from app.errors import fail
 from app.schemas import CaseCreate, Retrieval
 from app.services.rag import retrieve
 
@@ -181,6 +184,74 @@ async def documents(case_id: int, request: Request, db: DB, user: User,
     query = query.where(t.case_documents.c.id < before_id)
   rows = (await db.execute(query.order_by(t.case_documents.c.id.desc()).limit(limit))).mappings().all()
   return [dict(row) for row in rows]
+
+
+@router.delete("/cases/{case_id}/documents/{document_id}", status_code=204)
+async def delete_document(case_id: int, document_id: int, request: Request, db: DB, user: User):
+  """Soft-delete a case document file so historical citations and audit logs remain intact."""
+  t = request.app.state.db.t
+  case_row = await require_case(db, t, user["id"], case_id)
+  doc = (await db.execute(
+    select(
+      t.case_documents.c.id,
+      t.case_documents.c.file_id,
+      t.case_documents.c.uploaded_by.label("doc_uploaded_by"),
+      t.files.c.uploaded_by.label("file_uploaded_by"),
+    )
+    .select_from(t.case_documents.join(t.files, t.files.c.id == t.case_documents.c.file_id))
+    .where(
+      t.case_documents.c.id == document_id,
+      t.case_documents.c.case_id == case_id,
+      t.files.c.status != "deleted",
+    )
+    .with_for_update()
+  )).mappings().first()
+  if not doc:
+    fail(404, "document_not_found", "文档不存在或已删除")
+  uploader = doc["file_uploaded_by"] or doc["doc_uploaded_by"]
+  if case_row["owner_user_id"] != user["id"] and uploader != user["id"]:
+    fail(403, "document_delete_forbidden", "只有上传人或案件负责人可以删除文档")
+  now = datetime.now(UTC)
+  await db.execute(
+    update(t.files)
+    .where(t.files.c.id == doc["file_id"])
+    .values(status="deleted", updated_at=now)
+  )
+  await db.execute(
+    update(t.async_jobs)
+    .where(
+      t.async_jobs.c.resource_type == "file",
+      t.async_jobs.c.resource_id == doc["file_id"],
+      t.async_jobs.c.status.in_(["queued", "running"]),
+    )
+    .values(status="cancelled", lease_token=None, lease_expires_at=None, finished_at=now)
+  )
+  has_docs = (await db.execute(
+    select(1)
+    .select_from(t.case_documents.join(t.files, t.files.c.id == t.case_documents.c.file_id))
+    .where(t.case_documents.c.case_id == case_id, t.files.c.status == "available")
+    .limit(1)
+  )).first()
+  has_evidence = (await db.execute(
+    select(1)
+    .select_from(t.evidence_item_files.join(t.files, t.files.c.id == t.evidence_item_files.c.file_id))
+    .where(t.evidence_item_files.c.case_id == case_id, t.files.c.status == "available")
+    .limit(1)
+  )).first()
+  if not has_docs and not has_evidence and case_row["evidence_upload_status"] != "not_uploaded":
+    await db.execute(
+      update(t.cases)
+      .where(t.cases.c.id == case_id)
+      .values(evidence_upload_status="not_uploaded")
+    )
+  await db.execute(insert(t.audit_logs).values(
+    user_id=user["id"],
+    action="file.deleted",
+    resource_type="file",
+    resource_id=doc["file_id"],
+    metadata={"case_id": case_id, "document_id": document_id},
+  ))
+  await db.commit()
 
 
 @router.get("/cases/{case_id}/analyses")

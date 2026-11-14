@@ -91,3 +91,31 @@ test("files-only input marks unknown fields pending without fabricating document
   assert.equal(form.summary.includes("原型"), false);
   assert.equal(form.summary.includes("民事起诉状.docx"), true);
 });
+
+test("buildOrganizedDraft clamps summary within 2000 chars and buildCaseCreatePayload maps backend contract", () => {
+  const {
+    createEmptyDraftForm,
+    buildOrganizedDraft,
+    buildCaseCreatePayload,
+  } = loadOrganizer();
+  const form = createEmptyDraftForm();
+  form.summary = "借款".repeat(1000);
+  buildOrganizedDraft(form);
+  assert.equal(form.summary.length <= 2000, true);
+
+  form.title = "  ";
+  form.caseType = "刑事";
+  form.stage = "二审";
+  form.handlingIdentity = "代理他人";
+  form.partyRole = "近亲属/委托人";
+  form.ourParties = [" 张三 ", "", " 李四 "];
+  form.opponentParties = ["  "];
+  const payload = buildCaseCreatePayload(form);
+  assert.equal(payload.title, "未命名案件（待完善）");
+  assert.equal(payload.case_type, "criminal");
+  assert.equal(payload.procedure, "second_instance");
+  assert.equal(payload.handling_identity, "agent");
+  assert.equal(payload.party_role_label, "近亲属/委托人");
+  assert.deepEqual(Array.from(payload.our_parties), ["张三", "李四"]);
+  assert.deepEqual(Array.from(payload.opponent_parties), []);
+});

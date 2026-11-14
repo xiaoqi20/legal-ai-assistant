@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { onShow } from "@dcloudio/uni-app";
 import { storeToRefs } from "pinia";
 import { ref } from "vue";
 import AppDrawer from "@/components/AppDrawer.vue";
@@ -16,6 +17,18 @@ const { activeTab } = storeToRefs(home);
 const drawerOpen = ref(false);
 const chatOpen = ref(false);
 const chatQuestion = ref("");
+const casesHomeRef = ref<{ loadCases: () => Promise<void> } | null>(null);
+let hasShownOnce = false;
+
+onShow(() => {
+  if (!hasShownOnce) {
+    hasShownOnce = true;
+    return;
+  }
+  if (activeTab.value === "cases") {
+    casesHomeRef.value?.loadCases();
+  }
+});
 
 function openDrawer() {
   drawerOpen.value = true;
@@ -69,7 +82,7 @@ function handleLogout() {
       @menu="openDrawer"
       @profile="openProfile"
     />
-    <CasesHome v-if="activeTab === 'cases'" />
+    <CasesHome v-if="activeTab === 'cases'" ref="casesHomeRef" />
     <template v-else>
       <ChatConversation
         v-if="chatOpen"

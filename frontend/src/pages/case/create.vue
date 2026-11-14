@@ -10,11 +10,12 @@ import {
   CREATE_STAGE_OPTIONS,
 } from "@/constants/case";
 import { chooseCaseDocuments } from "@/platform/wechat/chooseDocuments";
+import { USE_MOCK } from "@/services/request";
 import { useCaseCreateStore } from "@/stores/caseCreate";
 import type { DraftPendingFieldKey, HandlingIdentity } from "@/types/case";
 
 const store = useCaseCreateStore();
-const { form, hasDraft } = storeToRefs(store);
+const { form, hasDraft, submitting } = storeToRefs(store);
 
 const scrollIntoView = ref("");
 
@@ -51,15 +52,25 @@ const partiesPending = computed(() => {
   return Boolean(form.value.pendingFields.parties && (!ourOk || !oppOk));
 });
 
-const submitButtonText = computed(() =>
-  readyFiles.value.length > 0 || hasTextInput.value
+const submitButtonText = computed(() => {
+  if (submitting.value) return "创建中…";
+  if (!USE_MOCK) return "创建案件";
+  return readyFiles.value.length > 0 || hasTextInput.value
     ? "创建案件并开始分析"
-    : "创建案件",
-);
+    : "创建案件";
+});
 
 const draftFooterHint = computed(() => {
   if (failedCount.value > 0) {
     return "存在上传失败的文件，请返回修改后创建";
+  }
+  if (!USE_MOCK) {
+    if (readyFiles.value.length > 0) {
+      return `Phase 1 先保存建档信息；建案后可在详情页「案件文档归类」上传 ${readyFiles.value.length} 份材料`;
+    }
+    return hasTextInput.value
+      ? "确认后保存案件与当事人信息，进入详情可继续补充材料"
+      : "将创建空白档案，进入详情后可随时补充";
   }
   if (readyFiles.value.length > 0) {
     return `建案后将解析 ${readyFiles.value.length} 份材料并分析案情`;
@@ -155,7 +166,8 @@ function onPartyInput(
   store.updateParty(side, index, detail?.value ?? "");
 }
 
-function handleSubmitCase() {
+async function handleSubmitCase() {
+  if (submitting.value) return;
   if (failedCount.value > 0) {
     uni.showToast({
       title: "存在上传失败的文件，请重试或移除后创建",
@@ -163,8 +175,17 @@ function handleSubmitCase() {
     });
     return;
   }
-  const created = store.createLocalCase();
-  uni.redirectTo({ url: `/pages/case/detail?id=${created.id}` });
+  try {
+    const created = await store.submitCase();
+    if (!created) return;
+    uni.redirectTo({ url: `/pages/case/detail?id=${created.id}` });
+  } catch (error) {
+    const msg =
+      error instanceof Error && error.message
+        ? error.message
+        : "创建案件失败，请稍后重试";
+    uni.showToast({ title: msg, icon: "none" });
+  }
 }
 </script>
 
@@ -446,6 +467,7 @@ function handleSubmitCase() {
             <input
               v-model="form.claim"
               class="form-input"
+              :maxlength="2000"
               placeholder="如：追回借款本金及利息 / 履行维修义务"
               placeholder-style="color:#b4bac5"
               @input="form.claim.trim() && clearPending('claim')"
@@ -563,6 +585,7 @@ function handleSubmitCase() {
                 <input
                   class="form-input form-input--flex"
                   :value="val"
+                  :maxlength="200"
                   :placeholder="
                     idx === 0
                       ? '选填，如：张某 / 某科技有限公司'
@@ -617,6 +640,7 @@ function handleSubmitCase() {
                 <input
                   class="form-input form-input--flex"
                   :value="val"
+                  :maxlength="200"
                   :placeholder="
                     idx === 0
                       ? '选填，如：李某 / 某物业公司'
@@ -664,6 +688,7 @@ function handleSubmitCase() {
           <view class="btn-soft-back" @click="goToInputStep">修改描述</view>
           <view
             class="btn-primary btn-primary--flex"
+            :class="{ 'btn-primary--disabled': submitting }"
             @click="handleSubmitCase"
           >
             {{ submitButtonText }}

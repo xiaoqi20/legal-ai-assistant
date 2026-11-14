@@ -54,6 +54,28 @@ export interface CaseDraftForm {
   pendingFields: DraftPendingFields;
 }
 
+export interface CasePartyItem {
+  id?: number;
+  case_id?: number;
+  party_role: string;
+  party_type: string;
+  name: string;
+  side?: "our" | "opponent" | null;
+  sort_order?: number;
+}
+
+export interface CaseCreatePayload {
+  title: string;
+  case_type: CaseType;
+  procedure: CaseProcedure;
+  summary: string | null;
+  claim: string | null;
+  handling_identity: "self" | "agent" | null;
+  party_role_label: string | null;
+  our_parties: string[];
+  opponent_parties: string[];
+}
+
 export interface CaseSummary {
   id: number;
   title: string;
@@ -69,10 +91,12 @@ export interface CaseSummary {
   created_at: string;
   updated_at: string;
   case_type_label?: string;
-  summary?: string;
-  claim?: string;
-  handling_identity?: string;
-  party_role?: string;
+  summary?: string | null;
+  claim?: string | null;
+  handling_identity?: "self" | "agent" | HandlingIdentity | null;
+  party_role?: string | null;
+  party_role_label?: string | null;
+  parties?: CasePartyItem[];
   our_parties?: string[];
   opponent_parties?: string[];
   files?: CaseDraftFile[];

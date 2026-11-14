@@ -1,5 +1,10 @@
-import { CREATE_STAGE_OPTIONS } from "@/constants/case";
+import {
+  CASE_PROCEDURE_CODE_MAP,
+  CASE_TYPE_CODE_MAP,
+  CREATE_STAGE_OPTIONS,
+} from "@/constants/case";
 import type {
+  CaseCreatePayload,
   CaseDraftForm,
   DraftCaseType,
   DraftPendingFields,
@@ -219,27 +224,34 @@ export function buildOrganizedDraft(form: CaseDraftForm): DraftPendingFields {
   if (!ourList.length || !oppList.length) pending.parties = true;
 
   const baseRaw = form.rawSummary || rawText;
-  const summaryParts: string[] = [];
+  const metaLines = [
+    `• 案件类型：${nextType || "待确认"} ｜ 办理阶段：${nextStage || "待确认"}`,
+    `• 核心诉求：${nextClaim || "待确认"}`,
+  ];
+  const metaSuffix = metaLines.join("\n");
+  const maxBodyLen = Math.max(0, 2000 - metaSuffix.length - 1);
+  let bodyLine = "";
   if (rawText) {
     const cleanRaw = rawText.replace(/^【案情摘要】/, "").split("\n")[0];
-    summaryParts.push(`【案情摘要】${cleanRaw}`);
+    bodyLine = `【案情摘要】${cleanRaw}`.slice(0, maxBodyLen);
   } else if (readyFiles.length) {
     const fileNames = readyFiles.map((x) => x.name).join("、");
-    summaryParts.push(
-      `已附首批材料 ${readyFiles.length} 份（${fileNames}），可补充案情文字描述或直接完善下方字段。`,
+    bodyLine = `已附首批材料 ${readyFiles.length} 份（${fileNames}），可补充案情文字描述或直接完善下方字段。`.slice(
+      0,
+      maxBodyLen,
     );
   }
-  summaryParts.push(
-    `• 案件类型：${nextType || "待确认"} ｜ 办理阶段：${nextStage || "待确认"}`,
-  );
-  summaryParts.push(`• 核心诉求：${nextClaim || "待确认"}`);
+  const summaryText = [bodyLine, ...metaLines]
+    .filter(Boolean)
+    .join("\n")
+    .slice(0, 2000);
 
   form.rawSummary = baseRaw;
-  form.summary = summaryParts.join("\n");
-  form.title = nextTitle;
+  form.summary = summaryText;
+  form.title = nextTitle.slice(0, 200);
   form.caseType = nextType;
   form.stage = nextStage;
-  form.claim = nextClaim;
+  form.claim = nextClaim.slice(0, 2000);
   form.ourParties = ourList.length ? ourList : [""];
   form.opponentParties = oppList.length ? oppList : [""];
   form.aiOrganized = true;
@@ -247,4 +259,40 @@ export function buildOrganizedDraft(form: CaseDraftForm): DraftPendingFields {
   form.pendingFields = pending;
 
   return pending;
+}
+
+/** 将前端建档草稿映射为后端 POST /cases 请求体 */
+export function buildCaseCreatePayload(form: CaseDraftForm): CaseCreatePayload {
+  const title = form.title.trim().slice(0, 200) || "未命名案件（待完善）";
+  const case_type = CASE_TYPE_CODE_MAP[form.caseType] || "other";
+  const procedure = CASE_PROCEDURE_CODE_MAP[form.stage] || "other";
+  const summary = form.summary.trim().slice(0, 2000) || null;
+  const claim = form.claim.trim().slice(0, 2000) || null;
+  const handling_identity =
+    form.handlingIdentity === "本人办理"
+      ? "self"
+      : form.handlingIdentity === "代理他人"
+        ? "agent"
+        : null;
+  const party_role_label = form.partyRole.trim().slice(0, 80) || null;
+  const our_parties = form.ourParties
+    .map((x) => x.trim().slice(0, 200))
+    .filter(Boolean)
+    .slice(0, 5);
+  const opponent_parties = form.opponentParties
+    .map((x) => x.trim().slice(0, 200))
+    .filter(Boolean)
+    .slice(0, 5);
+
+  return {
+    title,
+    case_type,
+    procedure,
+    summary,
+    claim,
+    handling_identity,
+    party_role_label,
+    our_parties,
+    opponent_parties,
+  };
 }

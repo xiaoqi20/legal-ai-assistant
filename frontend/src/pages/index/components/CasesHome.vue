@@ -5,6 +5,7 @@ import CaseCard from "./CaseCard.vue";
 import ComposerBar from "@/components/ComposerBar.vue";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import { fetchCases } from "@/services/cases";
+import { USE_MOCK } from "@/services/request";
 import { useCaseCreateStore } from "@/stores/caseCreate";
 import { useHomeStore } from "@/stores/home";
 import type { CaseSummary } from "@/types/case";
@@ -23,6 +24,7 @@ const selectingCase = ref(false);
 const greeting = getGreeting();
 
 const displayCases = computed(() => {
+  if (!USE_MOCK) return remoteCases.value;
   const kw = caseKeyword.value.trim().toLowerCase();
   const filteredLocal = localCases.value.filter(
     (item) => !kw || item.title.toLowerCase().includes(kw),
@@ -104,6 +106,7 @@ function openMic() {
 }
 
 onMounted(loadCases);
+defineExpose({ loadCases });
 </script>
 
 <template>

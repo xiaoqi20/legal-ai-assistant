@@ -4,7 +4,7 @@ import ts from "typescript";
 
 // Exercise the shipped service source for each uni-app compile target without
 // adding a second bundler or requiring a running/paid upstream service.
-export function loadService(name, { platform = "H5", request, globals = {} } = {}) {
+export function loadService(name, { platform = "H5", request, globals = {}, modules = {} } = {}) {
   let source = readFileSync(new URL(`../src/services/${name}.ts`, import.meta.url), "utf8");
   const active = [true];
   source = source.split("\n").filter((line) => {
@@ -27,6 +27,7 @@ export function loadService(name, { platform = "H5", request, globals = {} } = {
     AbortController, Response, ReadableStream, Blob, FormData, File,
     setTimeout, clearTimeout, console, crypto: globalThis.crypto,
     require: (id) => {
+      if (Object.hasOwn(modules, id)) return modules[id];
       if (!id.endsWith("request")) throw new Error(`Unexpected runtime import: ${id}`);
       return {
         API_BASE_URL: "http://test.invalid/api/v1", getStoredToken: () => "test-only-token",

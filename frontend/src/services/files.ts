@@ -214,6 +214,27 @@ export function reviewOcrPage(fileId: number, pageNo: number, correctedText: str
   );
 }
 
+const PROCESSING_ERROR_MESSAGES: Record<string, string> = {
+  invalid_pdf: "PDF 文件损坏或格式无效，请重新导出后上传",
+  encrypted_pdf_not_supported: "暂不支持加密 PDF，请解除密码后重新上传",
+  invalid_image: "图片损坏或格式无效，请重新选择图片",
+  unsupported_document: "暂不支持此文件格式，请转换为支持的格式后上传",
+  no_extractable_text_ocr_required: "未识别到有效文字，请检查文件内容后重新上传",
+  file_hash_mismatch: "文件完整性校验失败，请重新上传",
+  document_too_large: "文档内容过多，请拆分后重新上传",
+  too_many_pages: "文档页数过多，请拆分后重新上传",
+  too_many_ocr_pages: "待识别页数过多，请拆分后重新上传",
+  too_many_chunks: "文档内容过多，请拆分后重新上传",
+  docx_expansion_limit: "Word 文档内容过大，请精简后重新上传",
+};
+
+export function getFileProcessingError(status: FileStatusResponse): string {
+  if (status.status === "quarantined") return "文件完整性校验失败，请重新上传";
+  const code = String(status.metadata?.error_code || status.jobs?.find((job) => job.last_error)?.last_error || "");
+  return PROCESSING_ERROR_MESSAGES[code]
+    || (/[\u4e00-\u9fff]/.test(code) ? code : "文件处理失败，请检查文件后重新上传或稍后重试");
+}
+
 export async function waitForFileReady(
   fileId: number,
   maxAttempts = 20,
@@ -223,14 +244,13 @@ export async function waitForFileReady(
     const status = await fetchFileStatus(fileId);
     if (status.status === "available") return status;
     if (status.status === "failed" || status.status === "quarantined") {
-      const reason = status.jobs?.[0]?.last_error || "文件解析失败";
-      throw new Error(reason);
+      throw new Error(getFileProcessingError(status));
     }
     await new Promise<void>((resolve) => setTimeout(resolve, intervalMs));
   }
   const status = await fetchFileStatus(fileId);
   if (status.status === "failed" || status.status === "quarantined") {
-    throw new Error(status.jobs?.[0]?.last_error || "文件解析失败");
+    throw new Error(getFileProcessingError(status));
   }
   return status;
 }
@@ -246,6 +266,9 @@ export async function uploadCaseDocument(params: {
 }): Promise<FileStatusResponse> {
   const filename = sanitizeFilename(params.filename);
   const mimeType = resolveUploadMimeType(filename);
+  if (params.file?.size === 0 || params.buffer?.byteLength === 0) {
+    throw new Error("文件为空，请重新选择");
+  }
 
   let arrayBuffer = params.buffer;
   if (!arrayBuffer && params.file) {
@@ -257,6 +280,9 @@ export async function uploadCaseDocument(params: {
   }
   if (!arrayBuffer) {
     throw new Error("无法读取文件内容");
+  }
+  if (arrayBuffer.byteLength === 0) {
+    throw new Error("文件为空，请重新选择");
   }
 
   const sha256 = await sha256Hex(arrayBuffer);

@@ -62,7 +62,10 @@ function fileExt(name: string, mimeType?: string): string {
 
 function formatTime(iso: string | null | undefined): string {
   if (!iso) return "";
-  return iso.replace("T", " ").slice(0, 19);
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 function mapMaterial(row: BackendMaterialRow): CaseMaterial {
@@ -448,6 +451,19 @@ export async function fetchDocuments(caseId: number): Promise<CaseDocument[]> {
   }
   const rows = await request<BackendDocumentRow[]>(`/cases/${caseId}/documents`);
   return rows.map(mapDocument);
+}
+
+export async function deleteCaseDocument(
+  caseId: number,
+  documentId: number,
+): Promise<void> {
+  if (USE_MOCK) {
+    await delay();
+    return;
+  }
+  await request<void>(`/cases/${caseId}/documents/${documentId}`, {
+    method: "DELETE",
+  });
 }
 
 export type AnalysisPanelType =
