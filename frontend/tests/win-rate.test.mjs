@@ -74,6 +74,18 @@ test("triggerCaseAnalysis posts win_rate and fetchWinRateDetail parses breakdown
         positive_factors: ["核心凭证完整"],
         negative_factors: [],
         missing_evidence: [],
+        precedent_reference: {
+          dataset_label: "MSJudge 清洁裁判特征库（离线脱敏参照）",
+          cause_code: "private_lending",
+          pool_count: 500,
+          matched_count: 15,
+          similarity_avg: 91.2,
+          outcome_counts: { fully_supported: 12, partially_supported: 3, dismissed: 0 },
+          principal_support_rate: 100.0,
+          perspective_note: "原告核心诉求支持比例参考",
+          common_risk_factors: [{ key: "statutory_cap", label: "法定利率上限与利息扣减", count: 4 }],
+          caveat: "仅作结构参考",
+        },
         limitations: "仅基于已提交材料",
         disclaimer: "仅供办案风险研判参考",
       },
@@ -92,6 +104,8 @@ test("triggerCaseAnalysis posts win_rate and fetchWinRateDetail parses breakdown
   assert.equal(detail.win_rate, 84.5);
   assert.equal(detail.elements.length, 1);
   assert.equal(detail.elements[0].grade_label, "充分印证");
+  assert.equal(detail.precedent_reference?.matched_count, 15);
+  assert.equal(detail.precedent_reference?.common_risk_factors[0]?.count, 4);
 
   const ignored = mod.parseWinRateDetail({
     id: 5,

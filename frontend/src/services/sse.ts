@@ -27,7 +27,12 @@ export interface SseMetaEvent {
 export interface SseDoneEvent {
   message_id: number;
   status: "completed" | "failed" | "cancelled";
-  usage?: { input_tokens?: number; output_tokens?: number } | null;
+  usage?: {
+    input_tokens?: number;
+    output_tokens?: number;
+    cached_tokens?: number;
+    cache_miss_tokens?: number;
+  } | null;
 }
 
 export interface SseErrorEvent {

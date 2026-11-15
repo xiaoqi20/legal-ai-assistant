@@ -14,6 +14,7 @@ dependencies = [
   "psycopg[binary]>=3.2,<4",
   "pgvector>=0.4,<1",
   "openai>=2,<3",
+  "langgraph==1.2.22",
   "httpx>=0.28,<1",
   "boto3>=1.40,<2",
   "pypdf>=6,<7",
@@ -25,6 +26,9 @@ dependencies = [
 
 [dependency-groups]
 dev = ["pytest>=8,<10", "pytest-asyncio>=1,<2", "ruff>=0.13,<1"]
+eval = [
+    "ragas>=0.4.4",
+]
 
 [tool.pytest.ini_options]
 asyncio_mode = "auto"

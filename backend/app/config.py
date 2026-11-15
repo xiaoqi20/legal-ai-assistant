@@ -37,8 +37,25 @@ class Settings(BaseSettings):
   structured_output_tokens: int = Field(8192, ge=512, le=16384)
   max_output_chars: int = Field(32000, ge=100, le=100000)
   max_context_chars: int = Field(16000, ge=1000, le=50000)
+  tool_calling_enabled: bool = True
+  agent_max_rounds: int = Field(4, ge=1, le=10)
+  agent_max_tool_calls: int = Field(8, ge=1, le=30)
+  agent_max_tool_errors: int = Field(3, ge=1, le=10)
+  tool_timeout_seconds: float = Field(15, gt=0, le=60)
+  tool_max_argument_chars: int = Field(4096, ge=256, le=16000)
+  tool_max_result_chars: int = Field(4000, ge=512, le=16000)
+  assessment_enabled: bool = True
+  assessment_timeout_seconds: int = Field(180, ge=10, le=500)
+  assessment_max_model_calls: int = Field(8, ge=3, le=20)
+  assessment_max_tool_calls: int = Field(8, ge=1, le=20)
+  assessment_max_search_rounds: int = Field(3, ge=1, le=5)
   retrieval_top_k: int = Field(6, ge=1, le=20)
   retrieval_min_similarity: float = Field(0.25, ge=0, le=1)
+  rerank_enabled: bool = False
+  rerank_api_key: SecretStr = SecretStr("")
+  rerank_base_url: str = "https://api.siliconflow.cn/v1/rerank"
+  rerank_model: str = "BAAI/bge-reranker-v2-m3"
+  rerank_candidates: int = Field(20, ge=1, le=60)
   chunk_chars: int = Field(800, ge=200, le=2000)
   chunk_overlap: int = Field(100, ge=0, le=500)
   max_upload_bytes: int = Field(20 * 1024 * 1024, ge=1, le=100 * 1024 * 1024)
@@ -55,6 +72,7 @@ class Settings(BaseSettings):
   wechat_app_secret: SecretStr = SecretStr("")
   input_usd_per_million: Decimal | None = Field(None, ge=0)
   output_usd_per_million: Decimal | None = Field(None, ge=0)
+  precedent_reference_path: str | None = None
 
   @model_validator(mode="after")
   def validate_constraints(self):
@@ -68,6 +86,8 @@ class Settings(BaseSettings):
       raise ValueError("当前只支持阿里云 RecognizeGeneral OCR")
     if self.job_timeout_seconds >= self.job_lease_seconds:
       raise ValueError("任务超时必须小于租约时间")
+    if self.rerank_enabled and self.rerank_candidates < self.retrieval_top_k:
+      raise ValueError("启用重排时 rerank_candidates 不能小于 retrieval_top_k")
     return self
 
 

@@ -12,7 +12,10 @@ from sqlalchemy import func, insert, select, update
 
 from app.access import require_conversation
 from app.errors import fail
+from app.services.agent import AgentEvent, AgentStopped, ToolCallingAgent
+from app.services.ai import extract_cache_usage
 from app.services.rag import build_context, retrieve
+from app.services.tools import CaseTools, ToolAccessDenied
 
 logger = logging.getLogger(__name__)
 
@@ -106,7 +109,7 @@ async def still_authorized(database, user_id, conversation_id, message_id):
     return active is not None and status == "streaming"
 
 
-async def finalize(database, settings, prepared, content, status, code, usage, started):
+async def finalize(database, settings, prepared, content, status, code, usage, started, agent_metadata=None):
   t = database.t
   cost = None
   if usage and settings.input_usd_per_million is not None and settings.output_usd_per_million is not None:
@@ -115,8 +118,14 @@ async def finalize(database, settings, prepared, content, status, code, usage, s
   values = {"content": content, "completed_at": datetime.now(UTC),
             "latency_ms": int((time.monotonic() - started) * 1000),
             "cost_usd": cost, "lease_expires_at": None}
+  metadata = {}
+  if agent_metadata is not None:
+    metadata["agent"] = agent_metadata
   if usage:
     values.update(input_tokens=usage.prompt_tokens, output_tokens=usage.completion_tokens)
+    cache_usage = extract_cache_usage(usage)
+    if cache_usage:
+      metadata["prompt_cache"] = cache_usage
   async with database.sessions.begin() as db:
     current = (await db.execute(select(t.ai_messages.c.status).where(
       t.ai_messages.c.id == prepared["message_id"]).with_for_update())).scalar_one()
@@ -124,9 +133,22 @@ async def finalize(database, settings, prepared, content, status, code, usage, s
       status, code = "cancelled", "cancelled"
     elif current != "streaming":
       status, code = current, "stream_lease_expired"
+    if agent_metadata is not None:
+      metadata["agent"]["stop_reason"] = code or status
+    if metadata:
+      values["metadata"] = metadata
     values.update(status=status, error_code=code)
     await db.execute(update(t.ai_messages).where(t.ai_messages.c.id == prepared["message_id"]).values(**values))
   return status
+
+
+async def plain_events(ai, messages):
+  upstream = ai.stream(messages)
+  try:
+    async for chunk in upstream:
+      yield AgentEvent("chunk", chunk)
+  finally:
+    await upstream.aclose()
 
 
 async def events(request, user_id, payload, prepared):
@@ -138,6 +160,7 @@ async def events(request, user_id, payload, prepared):
   started = time.monotonic()
   pending = None
   upstream = None
+  agent = None
   last_checkpoint = started
   try:
     yield sse("meta", {"conversation_id": conversation_id, "message_id": message_id,
@@ -153,7 +176,16 @@ async def events(request, user_id, payload, prepared):
       yield sse("citations", {"sources": sources})
       messages = build_context(prepared["prompt"]["content"], prepared["history"], payload.content,
                                sources, settings.max_context_chars)
-      upstream = ai.stream(messages).__aiter__()
+      if settings.tool_calling_enabled and prepared["conversation"]["case_id"] is not None:
+        tools = CaseTools(database, ai, settings, user_id, prepared["conversation"]["case_id"], sources)
+
+        async def authorize():
+          return await still_authorized(database, user_id, conversation_id, message_id)
+
+        agent = ToolCallingAgent(ai, settings, tools, authorize)
+        upstream = agent.events(messages).__aiter__()
+      else:
+        upstream = plain_events(ai, messages).__aiter__()
       finish_reason = None
       while True:
         if pending is None:
@@ -166,13 +198,28 @@ async def events(request, user_id, payload, prepared):
           yield b": keepalive\n\n"
           continue
         try:
-          chunk = pending.result()
+          event = pending.result()
         except StopAsyncIteration:
           break
         finally:
           pending = None
+        if agent is not None:
+          usage = agent.usage.total
+        if event.kind == "sources":
+          additions = event.value[len(sources):]
+          if additions:
+            async with database.sessions.begin() as db:
+              await require_conversation(db, t, user_id, conversation_id)
+              for source in additions:
+                await db.execute(insert(t.ai_citations).values(message_id=message_id, **source))
+            sources = list(event.value)
+            yield sse("citations", {"sources": sources})
+          continue
+        if event.kind == "usage":
+          continue
+        chunk = event.value
         if chunk.usage is not None:
-          usage = chunk.usage
+          usage = agent.usage.total if agent is not None else chunk.usage
         if chunk.choices:
           choice = chunk.choices[0]
           finish_reason = choice.finish_reason or finish_reason
@@ -202,6 +249,10 @@ async def events(request, user_id, payload, prepared):
     raise
   except TimeoutError:
     code = "generation_timeout"
+  except AgentStopped as error:
+    code = error.code
+  except ToolAccessDenied:
+    code, status = "cancelled", "cancelled"
   except Exception as error:
     code = "upstream_error"
     logger.warning("chat_failed message_id=%s type=%s", message_id, type(error).__name__)
@@ -215,13 +266,20 @@ async def events(request, user_id, payload, prepared):
       if upstream:
         with contextlib.suppress(Exception):
           await upstream.aclose()
+      if agent is not None:
+        usage = agent.usage.total
       try:
-        status = await finalize(database, settings, prepared, content, status, code, usage, started)
+        status = await finalize(database, settings, prepared, content, status, code, usage, started,
+          agent.metadata if agent is not None else None)
       except Exception as error:
         logger.error("stream_persistence_failed message_id=%s type=%s", message_id, type(error).__name__)
         # ASGI servers log unhandled stream exceptions. Never include SQL parameters/document text.
         raise RuntimeError("stream_persistence_failed") from None
   if status != "completed":
     yield sse("error", {"code": code or status, "message": "本次回答未完成，可查看历史后重新提问", "retryable": status != "cancelled"})
-  yield sse("done", {"message_id": message_id, "status": status,
-                     "usage": {"input_tokens": usage.prompt_tokens, "output_tokens": usage.completion_tokens} if usage else None})
+  usage_payload = (
+    {"input_tokens": usage.prompt_tokens, "output_tokens": usage.completion_tokens,
+     **extract_cache_usage(usage)}
+    if usage else None
+  )
+  yield sse("done", {"message_id": message_id, "status": status, "usage": usage_payload})

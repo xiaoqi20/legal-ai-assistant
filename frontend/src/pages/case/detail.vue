@@ -457,6 +457,28 @@ function openMic() {
             <text v-for="(item, idx) in winRateDetail.missing_evidence" :key="`m-${idx}`" class="wr-bullet">· {{ item }}</text>
           </view>
 
+          <view v-if="winRateDetail.precedent_reference" class="wr-sec">
+            <text class="wr-sec-title">同类判例结构参照（不影响当前未校准分值）</text>
+            <view class="wr-item">
+              <view class="wr-item-head">
+                <text class="wr-item-title">
+                  匹配 Top-{{ winRateDetail.precedent_reference.matched_count }} / {{ winRateDetail.precedent_reference.pool_count }} 案
+                </text>
+                <text class="wr-tag wr-tag--blue">
+                  结构相似度 {{ winRateDetail.precedent_reference.similarity_avg }}%
+                </text>
+              </view>
+              <text class="wr-item-desc">
+                相似判例结果分布：全部支持 {{ winRateDetail.precedent_reference.outcome_counts.fully_supported }} 案 · 部分支持 {{ winRateDetail.precedent_reference.outcome_counts.partially_supported }} 案 · 驳回 {{ winRateDetail.precedent_reference.outcome_counts.dismissed }} 案（核心本金获支持率 {{ winRateDetail.precedent_reference.principal_support_rate }}%）
+              </text>
+              <text v-if="winRateDetail.precedent_reference.common_risk_factors.length" class="wr-item-desc">
+                类案高频风险：{{ winRateDetail.precedent_reference.common_risk_factors.map((f) => `${f.label}(${f.count}案)`).join("、") }}
+              </text>
+              <text class="wr-item-desc">{{ winRateDetail.precedent_reference.perspective_note }}</text>
+              <text class="wr-item-desc">{{ winRateDetail.precedent_reference.caveat }}</text>
+            </view>
+          </view>
+
           <view class="wr-disclaimer">
             <text v-if="winRateDetail.limitations" class="wr-limit">测算范围：{{ winRateDetail.limitations }}</text>
             <text class="wr-disc-text">{{ winRateDetail.disclaimer }}</text>

@@ -172,6 +172,29 @@ export interface WinRateClaimItem {
   support_score: number;
 }
 
+export interface PrecedentRiskFactor {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface PrecedentReferenceSummary {
+  dataset_label: string;
+  cause_code: string;
+  pool_count: number;
+  matched_count: number;
+  similarity_avg: number;
+  outcome_counts: {
+    fully_supported: number;
+    partially_supported: number;
+    dismissed: number;
+  };
+  principal_support_rate: number;
+  perspective_note: string;
+  common_risk_factors: PrecedentRiskFactor[];
+  caveat: string;
+}
+
 export interface WinRateBreakdown {
   applicable: boolean;
   win_rate: number | null;
@@ -188,6 +211,7 @@ export interface WinRateBreakdown {
   positive_factors: string[];
   negative_factors: string[];
   missing_evidence: string[];
+  precedent_reference?: PrecedentReferenceSummary | null;
   limitations: string;
   disclaimer: string;
 }

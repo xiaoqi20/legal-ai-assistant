@@ -183,3 +183,13 @@ class DraftSave(Input):
   expected_revision: int = Field(ge=0)
   title: str = Field(min_length=1, max_length=200)
   body: str = Field(min_length=1, max_length=30000)
+
+
+class AssessmentCreate(Input):
+  question: str = Field("请综合研判当前案件的主要争点、证据缺口和补充建议。", min_length=1, max_length=2000)
+  client_request_id: str = Field(min_length=1, max_length=64, pattern=r"^[a-zA-Z0-9_-]+$")
+
+
+class AssessmentResume(Input):
+  revision: int = Field(gt=0)
+  answers: str = Field(min_length=1, max_length=4000)

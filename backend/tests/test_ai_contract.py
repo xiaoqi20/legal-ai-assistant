@@ -8,7 +8,13 @@ from app.config import Settings
 from app.services.ai import AI
 
 
-async def test_real_sdk_stream_protocol_and_embedding_dimensions():
+@pytest.mark.parametrize("base_url,uses_bailian", [
+  ("https://api.deepseek.com", False),
+  ("https://workspace.cn-beijing.maas.aliyuncs.com/compatible-mode/v1", True),
+  ("https://dashscope.aliyuncs.com/compatible-mode/v1", True),
+  ("https://dashscope-us.aliyuncs.com/compatible-mode/v1", True),
+])
+async def test_real_sdk_stream_protocol_and_embedding_dimensions(base_url, uses_bailian):
   seen = []
   def upstream(request):
     payload = json.loads(request.content)
@@ -26,7 +32,8 @@ async def test_real_sdk_stream_protocol_and_embedding_dimensions():
       '"usage":{"prompt_tokens":10,"completion_tokens":3,"total_tokens":13}}\n\n'
       'data: [DONE]\n\n'
     ).encode())
-  ai = AI(Settings(_env_file=None, deepseek_api_key=SecretStr("test"), embedding_api_key=SecretStr("test")))
+  ai = AI(Settings(_env_file=None, deepseek_api_key=SecretStr("test"), deepseek_base_url=base_url,
+    embedding_api_key=SecretStr("test")))
   await ai.chat._client.aclose()
   await ai.embeddings._client.aclose()
   ai.chat._client = httpx.AsyncClient(transport=httpx.MockTransport(upstream))
@@ -38,6 +45,11 @@ async def test_real_sdk_stream_protocol_and_embedding_dimensions():
     assert chunks[0].choices[0].delta.content == "中文回答"
     assert chunks[-1].usage.prompt_tokens == 10
     assert seen[-1]["stream_options"]["include_usage"] is True
+    assert "thinking" not in seen[-1]
+    if uses_bailian:
+      assert seen[-1]["enable_thinking"] is False
+    else:
+      assert "enable_thinking" not in seen[-1]
   finally:
     await ai.close()
 

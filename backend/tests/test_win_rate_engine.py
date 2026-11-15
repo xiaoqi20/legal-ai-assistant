@@ -168,3 +168,82 @@ def test_stage0_eligibility_and_fingerprint_sensitivity():
   fp1 = compute_input_fingerprint(base_case, [], files, mats, links)
   fp2 = compute_input_fingerprint(base_case, [], files, [{"id": 5, "status": "lawyer_approved", "revision": 2}], links)
   assert fp1 != fp2
+
+
+def test_precedent_reference_matching_anonymized_and_optional(tmp_path):
+  import json
+
+  from app.services.precedent_reference import match_precedent_reference
+
+  trust = {10: 1.0, 11: 1.0, 12: 1.0, 13: 1.0}
+  strong_report = compute_win_rate(
+    WinRateExtraction(cause_code="private_lending", claims=[ClaimItem(index=0, title="归还本金", amount_yuan=100000)],
+      elements=_lending_elements("proven")),
+    _sources(), trust, "plaintiff_side",
+  )
+  weak_report = compute_win_rate(
+    WinRateExtraction(
+      cause_code="private_lending",
+      claims=[ClaimItem(index=0, title="归还本金", amount_yuan=100000)],
+      elements=[
+        ElementExtraction(key="lending_intent", label="借贷合意", grade="weak", citation_ranks=[1], summary="口头"),
+        ElementExtraction(key="fund_delivery", label="款项实际交付", grade="weak", citation_ranks=[2], summary="存疑"),
+        ElementExtraction(key="maturity_breach", label="借期届满及逾期未还", grade="missing", citation_ranks=[], summary="未见"),
+        ElementExtraction(key="interest_agreement", label="利息与违约金约定", grade="missing", citation_ranks=[], summary="未见"),
+      ],
+      defeaters=[DefeaterExtraction(
+        key="contract_invalidity", label="效力争议", presence="confirmed", lethality=0.8, citation_ranks=[3], summary="争议",
+      )],
+    ),
+    _sources(), trust, "plaintiff_side",
+  )
+
+  # Missing or unset path cleanly disables precedent reference
+  assert match_precedent_reference(strong_report, None) is None
+  assert match_precedent_reference(strong_report, str(tmp_path / "missing.jsonl")) is None
+
+  ref_file = tmp_path / "synthetic_refs.jsonl"
+  rows = [
+    {
+      "doc_id": f"SYN-STRONG-{i}",
+      "cause_code": "private_lending",
+      "claimed_amount_yuan": 100000.0,
+      "outcome_label": "fully_supported",
+      "case_win": True,
+      "win_rate_prediction": {
+        "raw_support_score": 88.0,
+        "elements": [{"key": "lending_intent", "grade": "proven"}, {"key": "fund_delivery", "grade": "proven"},
+                     {"key": "maturity_breach", "grade": "proven"}, {"key": "interest_agreement", "grade": "proven"}],
+        "defeaters": [],
+      },
+    }
+    for i in range(4)
+  ] + [
+    {
+      "doc_id": f"SYN-WEAK-{i}",
+      "cause_code": "private_lending",
+      "claimed_amount_yuan": 100000.0,
+      "outcome_label": "dismissed",
+      "case_win": False,
+      "win_rate_prediction": {
+        "raw_support_score": 15.0,
+        "elements": [{"key": "lending_intent", "grade": "weak"}, {"key": "fund_delivery", "grade": "weak"},
+                     {"key": "maturity_breach", "grade": "missing"}, {"key": "interest_agreement", "grade": "missing"}],
+        "defeaters": [{"key": "contract_invalidity", "presence": "confirmed"}],
+      },
+    }
+    for i in range(4)
+  ]
+  ref_file.write_text("\n".join(json.dumps(r, ensure_ascii=False) for r in rows) + "\n", encoding="utf-8")
+
+  strong_ref = match_precedent_reference(strong_report, str(ref_file), top_k=3)
+  weak_ref = match_precedent_reference(weak_report, str(ref_file), top_k=3)
+  assert strong_ref is not None and weak_ref is not None
+  assert strong_ref["pool_count"] == 8 and strong_ref["matched_count"] == 3
+  assert strong_ref["outcome_counts"] == {"fully_supported": 3, "partially_supported": 0, "dismissed": 0}
+  assert weak_ref["outcome_counts"] == {"fully_supported": 0, "partially_supported": 0, "dismissed": 3}
+  assert weak_ref["common_risk_factors"][0]["key"] == "contract_invalidity"
+  assert "SYN-" not in json.dumps(strong_ref, ensure_ascii=False)
+
+  other_cause = {**strong_report, "cause_code": "general_civil"}
+  assert match_precedent_reference(other_cause, str(ref_file), top_k=3) is None

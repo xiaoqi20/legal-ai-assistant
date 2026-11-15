@@ -256,6 +256,12 @@ async def retrieval(case_id: int, payload: Retrieval, request: Request, db: DB, 
   if not request.app.state.settings.embedding_api_key.get_secret_value():
     from app.errors import fail
     fail(503, "embedding_not_configured", "向量化服务尚未配置")
+  if request.app.state.settings.rerank_enabled and not request.app.state.settings.rerank_api_key.get_secret_value():
+    from app.errors import fail
+    fail(503, "rerank_not_configured", "重排服务尚未配置")
+  request.app.state.ai.check_rerank()
   sources = await retrieve(db, t, request.app.state.ai, request.app.state.settings,
                            user["id"], case_id, payload.query)
-  return {"sources": sources, "strategy": "pgvector_cosine+pg_trgm_rrf_v1"}
+  strategy = ("pgvector_cosine+pg_trgm_rrf+bge_rerank_v1"
+              if request.app.state.settings.rerank_enabled else "pgvector_cosine+pg_trgm_rrf_v1")
+  return {"sources": sources, "strategy": strategy}

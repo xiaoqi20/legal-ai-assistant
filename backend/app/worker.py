@@ -41,6 +41,13 @@ async def claim(database, settings):
         meta = (await db.execute(select(t.case_analyses.c.case_id, t.case_analyses.c.analysis_type)
           .where(t.case_analyses.c.id == row["resource_id"]))).mappings().one()
         await refresh_analysis_status(db, t, meta["case_id"], meta["analysis_type"])
+      if row["resource_type"] == "assessment":
+        await db.execute(update(t.case_assessment_runs).where(t.case_assessment_runs.c.id == row["resource_id"],
+          t.case_assessment_runs.c.status.in_(["pending", "running"]))
+          .values(status="failed" if row["attempts"] >= row["max_attempts"] else "pending",
+            stage="failed" if row["attempts"] >= row["max_attempts"] else "queued",
+            completed_at=now if row["attempts"] >= row["max_attempts"] else None,
+            error_code="worker_lease_expired"))
       if row["resource_type"] == "file" and row["attempts"] >= row["max_attempts"]:
         file = (await db.execute(select(t.files).where(t.files.c.id == row["resource_id"]))).mappings().first()
         if file and file["status"] not in {"deleted", "quarantined"}:
@@ -68,6 +75,9 @@ async def claim(database, settings):
 
 async def process_job(database, ai, storage, settings, job, ocr):
   t = database.t
+  if job["job_type"] == "case_assessment":
+    from app.services.assessment import process_assessment
+    return await process_assessment(database, ai, settings, job)
   if job["job_type"] == "case_analysis":
     from app.services.analysis import process_analysis
     return await process_analysis(database, ai, settings, job)
@@ -227,7 +237,8 @@ async def run_once(database, ai, storage, settings, ocr=None):
   if job is None:
     return False
   try:
-    async with asyncio.timeout(settings.job_timeout_seconds):
+    timeout = settings.assessment_timeout_seconds + 5 if job["job_type"] == "case_assessment" else settings.job_timeout_seconds
+    async with asyncio.timeout(timeout):
       processing = asyncio.create_task(process_job(database, ai, storage, settings, job, ocr))
       try:
         while not processing.done():
@@ -257,6 +268,10 @@ async def run_once(database, ai, storage, settings, ocr=None):
           with contextlib.suppress(asyncio.CancelledError):
             await processing
   except Exception as error:
+    if job["resource_type"] == "assessment":
+      from app.services.assessment import fail_run
+      await fail_run(database, job, "assessment_execution_failed")
+      return True
     # Never persist upstream error strings, URLs, keys, or document text.
     code = str(error) if isinstance(error, ValueError) else type(error).__name__
     code = code if code.isidentifier() else "document_processing_failed"

@@ -726,6 +726,10 @@ export function parseWinRateDetail(
     missing_evidence: Array.isArray(c.missing_evidence)
       ? (c.missing_evidence as string[])
       : [],
+    precedent_reference:
+      c.precedent_reference && typeof c.precedent_reference === "object"
+        ? (c.precedent_reference as WinRateBreakdown["precedent_reference"])
+        : null,
     limitations: typeof c.limitations === "string" ? c.limitations : "",
     disclaimer:
       typeof c.disclaimer === "string"

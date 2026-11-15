@@ -94,7 +94,8 @@ async def messages(conversation_id: int, request: Request, db: DB, user: User,
 async def stream(conversation_id: int, payload: MessageCreate, request: Request, user: User):
   async with request.app.state.db.sessions() as db:
     conversation = await require_conversation(db, request.app.state.db.t, user["id"], conversation_id)
-  request.app.state.ai.check(embeddings=conversation["case_id"] is not None)
+  has_case = conversation["case_id"] is not None
+  request.app.state.ai.check(embeddings=has_case, rerank=has_case)
   # A separate short session commits messages before headers leave the server.
   prepared = await prepare(request.app.state.db, request.app.state.settings, user["id"], conversation_id, payload)
   return StreamingResponse(events(request, user["id"], payload, prepared), media_type="text/event-stream",

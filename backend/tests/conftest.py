@@ -17,6 +17,13 @@ class FakeAI:
   def check(self, **kwargs):
     pass
 
+  def check_rerank(self):
+    pass
+
+  async def rerank(self, query, documents, *, top_n=None):
+    limit = min(len(documents), top_n or len(documents))
+    return [(i, max(0.0, 1.0 - i * 0.05)) for i in range(limit)]
+
   async def close(self):
     pass
 
@@ -38,7 +45,7 @@ class FakeAI:
     if self.mode == "slow":
       import asyncio
       await asyncio.sleep(10)
-    for text in ("根据现有信息，", "合同约定价款为100万元。" + ("[1]" if '"citation"' in messages[0]["content"] else "")):
+    for text in ("根据现有信息，", "合同约定价款为100万元。" + ("[1]" if any('"citation"' in m["content"] for m in messages) else "")):
       yield SimpleNamespace(usage=None, choices=[SimpleNamespace(
         delta=SimpleNamespace(content=text), finish_reason=None)])
     yield SimpleNamespace(usage=SimpleNamespace(prompt_tokens=100, completion_tokens=30),
@@ -81,6 +88,7 @@ async def app():
     command.upgrade(Config("alembic.ini"), "head")
   settings = Settings(_env_file=None, env="test", database_url=configured.database_url,
     allow_dev_login=True, deepseek_api_key=SecretStr("test"), embedding_api_key=SecretStr("test"),
+    tool_calling_enabled=False,
     input_usd_per_million="1", output_usd_per_million="2")
   application = create_app(settings)
   async with application.router.lifespan_context(application):

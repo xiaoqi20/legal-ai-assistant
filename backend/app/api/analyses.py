@@ -12,7 +12,7 @@ router = APIRouter()
 
 @router.post("/cases/{case_id}/analyses", status_code=202)
 async def create(case_id: int, payload: AnalysisCreate, request: Request, db: DB, user: User):
-  request.app.state.ai.check()
+  request.app.state.ai.check(rerank=True)
   t = request.app.state.db.t
   await db.execute(select(func.pg_advisory_xact_lock(42701113)))
   await require_case(db, t, user["id"], case_id)

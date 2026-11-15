@@ -37,6 +37,8 @@ data: {"message_id":2,"status":"completed","usage":{"input_tokens":100,"output_t
 
 `citations` 是此次召回的有权访问材料，`rank` 与答案中的 `[1]` 对应；来源为空时必须向用户说明材料不足。它不代表所有召回来源都被模型逐一使用。只传最终回答，禁止展示模型 reasoning_content。收到 `delta` 只代表收到部分文本，**必须以 `done.status == completed` 判定成功**。
 
+案件问答默认启用受限的工具调用循环。补充检索新增来源时会在最终回答前再次发送累计 `citations`，客户端应替换来源数组，已有编号保持稳定。工具选择和结果不作为 `delta` 发送；`done.usage` 汇总工具选择及最终回答的模型用量，任一请求缺失 usage 时为 `null`。执行方式与配置见 [工具调用架构](tool-calling.md)。
+
 流内失败仍为 HTTP 200，输出错误和终态，不能只看 HTTP 状态：
 
 ```text
@@ -49,6 +51,8 @@ data: {"message_id":2,"status":"failed","usage":null}
 ```
 
 错误可能为 `upstream_error`、`upstream_incomplete`、`generation_timeout`、`output_limit`、`invalid_citation`、`cancelled`。正常等待可能收到注释 `: keepalive`，客户端忽略即可。总生成超时覆盖检索和生成，不在部分 token 已输出后自动重试上游。
+
+工具循环还可能以 `tool_round_limit`、`tool_call_limit`、`tool_error_limit`、`tool_repeated_call`、`tool_context_limit`、`tool_protocol_error` 终止，均返回 `error` 后跟 `done.status=failed`；权限撤销沿用 `cancelled`。单个工具的可修正错误只回传模型，达到累计错误上限才结束整个回答。
 
 小程序须用增量 UTF-8 解码器处理分块，保留尚未组成完整字符的字节；再保留尚未组成 `\n\n` 的 SSE 帧。网络块与事件/JSON/中文字符不对齐，禁止对每块直接 `JSON.parse`。一个网络块可能包含多个事件，任何事件也可能跨多个网络块。不要依赖浏览器 EventSource，因为此接口是带 Authorization 的 POST。
 

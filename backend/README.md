@@ -8,11 +8,12 @@ Python **3.12.14** + FastAPI **0.162.5** + Pydantic **2.14.3** + SQLAlchemy **2.
 - 案件列表/搜索/详情与新建，证据目录/材料/附件、案件文档和分析结果查询；个人归属或有效组织成员权限检查。建案写入案件摘要、诉求及当事人并记录审计日志，编辑案件暂不开放。
 - 私有 S3 兼容上传 POST 策略（5 分钟、服务端生成 key、精确大小/类型），完成确认后创建持久化任务。下载地址有效 2 分钟。必须启用对象版本控制，固定版本读取，Worker 重新校验 SHA-256。
 - PDF、DOCX、UTF-8 TXT 及 JPEG/PNG 图片解析；扫描 PDF 与图片由 PostgreSQL 持久 Worker 异步调用阿里云 OCR，保留页码、文字块坐标、置信度、识别来源及原文。低于阈值（默认 0.85）的页面需人工校对；审核通过后排队进入重叠分块、阿里云 `text-embedding-v4`（显式 1536 维）和现有 RAG。OCR Key 使用独立的 `LAW_OCR_ACCESS_KEY_ID`、`LAW_OCR_ACCESS_KEY_SECRET`，需开通 OCR API 权限；支持 region、阈值和单文档 OCR 页数配置。识别结果会传输至阿里云 OCR 服务，部署前需确认数据处理授权及费用。
-- 显式 SQL 工作流：权限过滤 → pgvector 余弦召回 + pg_trgm 候选 → RRF 排序 → 上下文预算 → 版本化提示词 → DeepSeek。无 LangChain、Agent 或独立向量库。助手模式只使用本人的对话上下文，不擅自检索所有案件。
+- 显式 SQL 检索：权限过滤 → pgvector 余弦召回 + pg_trgm 候选 → RRF 排序 → 上下文预算。案件问答在初次检索后使用受限的单 Agent ReAct / Tool Calling，可读取当前案件概况、补充检索材料，再以 `tool_choice=none` 流式回答；提供参数校验、结构化结果/错误反馈、调用/轮数/错误预算和重复调用终止。助手模式只使用本人的对话上下文，不擅自检索所有案件。详见 [工具调用架构](docs/tool-calling.md)。
 - DeepSeek POST SSE：元信息、召回来源、中文增量、错误、结束事件；消息/引用/模型/提示词/耗时/用量落库。成本为配置价格的估算，价格或上游 usage 缺失时保留 `null`。不输出或保存模型 reasoning_content。
 - 同一会话单次生成、幂等键、跨实例数据库并发/速率限制、上下文/输出限制、总超时、显式取消、断连与失效租约恢复。截断/上游不完整流不会标成功。不自动重试已消费的生成请求，避免重复计费。
 - 案情摘要、时间轴、司法推理、争议焦点、证据链/清单异步分析，使用显式 RAG + DeepSeek JSON 输出与 Pydantic 校验，保存来源指纹与分析来源。分析可取消；结果仅覆盖检索片段，不声称遍历了完整卷宗。不生成胜诉率。
 - 对话历史分页、重命名、反馈、批量软删除及追加审计。
+- 独立的受控案件研判 Agent（LangGraph 1.2.22）：争点规划、受限材料检索、证据覆盖检查与带来源的研判草稿；支持缺少背景时暂停补充、PostgreSQL 检查点恢复、取消、输入版本校验和累计预算。后端入口为 `/cases/{id}/assessment-runs`，部署与契约见 [案件研判 v1](docs/case-assessment.md)。
 - 二期新增材料草稿、版本、附件关联、提交/撤回、法务复核与操作快照；材料 AI 意见独立存储。新增证据目录和民事起诉状草稿、编辑历史版本、指定版本 DOCX 导出。规则和待办见 [二期推进记录](docs/phase-two-progress.md)。
 
 外部服务未配置时返回明确错误，应用不会回退 Mock AI。测试中的替身仅存在于 `tests/`。`frontend/` 已有真实 API 适配，可通过 `VITE_USE_MOCK=false` 连接认证、案件、会话/SSE、文件、分析、历史与资料接口；小程序真机授权、SSE 分块、上传/下载和正式网络仍需端到端验收。
@@ -29,6 +30,14 @@ uv sync --frozen
 
 首次配置时复制 `.env.example` 为 `.env`；已有配置不要覆盖。设置 URL 编码后的数据库连接串、DeepSeek API Key、阿里云 Embedding Key、模型名、地区对应的 base URL、S3 密钥。`.env` 已忽略，建议权限 `0600`。本机已完成真实 DeepSeek、阿里云 Embedding 和微信 access_token 联调，脱敏记录见 `docs/live-validation.json`；微信完整手机号登录仍待真机验收。
 
+### 切换阿里云百炼 DeepSeek
+
+在 `.env` 中替换 `LAW_DEEPSEEK_API_KEY`、`LAW_DEEPSEEK_BASE_URL`、`LAW_DEEPSEEK_MODEL`，每项只保留一处。API Key、模型 ID 与接入地址使用百炼同一地域控制台的配置；北京业务空间地址形如 `https://<WorkspaceId>.cn-beijing.maas.aliyuncs.com/compatible-mode/v1`，模型例如 `deepseek-v4.1-flash-1017`，以账号实际开通模型为准。Base URL 不包含 `/chat/completions`。
+
+适配器识别百炼 `*.maas.aliyuncs.com` 业务空间域名及 `dashscope.aliyuncs.com` / `dashscope-intl.aliyuncs.com` / `dashscope-us.aliyuncs.com` 兼容地址，流式对话与结构化 JSON 分析均显式发送 `enable_thinking=false`。DeepSeek 官方接口保留原有流式参数，JSON 分析发送 `thinking.type=disabled`。切换后重启 API 与 Worker，分别验证流式对话和 JSON 分析；`/health/ready` 不会验证上游凭据。Embedding 使用独立配置，切换聊天模型不需要重建向量。
+
+价格配置 `LAW_INPUT_USD_PER_MILLION` / `LAW_OUTPUT_USD_PER_MILLION` 的单位仍为美元/百万 token；切换供应商后需重新核对，未知时留空，使费用保持 `null`，不能直接填人民币价格。
+
 数据库迁移：
 
 ```sh
@@ -42,7 +51,7 @@ uv run alembic upgrade head
 
 已有 Alembic 版本的数据库直接 `upgrade head`。禁止对既有数据重复执行初始 DDL，禁止直接 `stamp head` 绕过实际迁移。迁移不会在 API 启动时自动运行；API 校验数据库当前版本。0001 基线不可自动回滚删除业务库；0002~0006 可逆，提示词回滚采用退役，保留历史引用。基线快照见 `migrations/sql/0001_initial.sql`。
 
-当前版本为 `0007`，增加材料证明目的/版本、复核快照和文书历史版本；API/Worker 均需重启。0007 回滚前如已有新状态材料或文书分析，须先显式迁移这些数据，避免静默丢失。结构化 JSON 输出使用独立 `LAW_STRUCTURED_OUTPUT_TOKENS`（默认 8192）与非思考模式，避免思考占用输出额度导致截断；仍执行总超时、长度、Schema 和来源编号校验。
+当前版本为 `0009`，新增独立案件研判运行、步骤台账与受租约保护的 LangGraph 检查点；API/Worker 均需重启。`0007` 提供材料复核与文书版本，`0008` 提供胜诉率引擎；这些版本及 `0009` 的历史业务数据须在回滚前显式归档/迁移，避免丢失。结构化 JSON 输出使用独立 `LAW_STRUCTURED_OUTPUT_TOKENS`（默认 8192）与非思考模式，避免思考占用输出额度导致截断；仍执行总超时、长度、Schema 和来源编号校验。
 
 启动本地对象存储（`backend/.env` 设置独立随机 S3 密钥）：
 
@@ -100,6 +109,20 @@ uv run pytest -q
 
 测试需在 `.env.test` 中显式配置独立、名称以 `_test` 结尾的 PostgreSQL 数据库。测试会**删除并重建该测试库的 law schema**，每个场景独立迁移；禁止填业务数据库。核心测试使用真实 PostgreSQL/pgvector 与替身上游，覆盖权限、SQL 检索、任务重试/租约、流式生命周期、幂等与软删除，不需要付费 API Key。真实 S3 和真实上游账号的联调必须另行验证。
 
+### 检索重排、Prompt Caching 与 RAGAS 离线评测
+
+- **BGE-Reranker 精排**：在 `.env` 配置 `LAW_RERANK_ENABLED=true`、`LAW_RERANK_API_KEY`、`LAW_RERANK_BASE_URL`、`LAW_RERANK_MODEL`（默认 SiliconFlow `BAAI/bge-reranker-v2-m3`，亦兼容阿里云百炼 `services/rerank/text-rerank/text-rerank`）与 `LAW_RERANK_CANDIDATES` 后，`retrieve()` 会先用 pgvector + pg_trgm RRF 召回候选片段，再交由 Cross-Encoder 精排并更新 `strategy`（开启时为 `pgvector_cosine+pg_trgm_rrf+bge_rerank_v1`，未配 Key 时显式返回 `503 rerank_not_configured`）。
+- **Prompt Caching 对齐与观测**：`build_context()` 与分析工作流将静态系统提示词及 JSON Schema 固定在消息前缀，动态召回证据 JSON 与案件元数据后置到末尾 `user` 消息；`ai_messages.metadata["prompt_cache"]` 与 SSE `done.usage` 会提取并记录 `cached_tokens` / `cache_miss_tokens`。
+- **RAGAS 评测流水线**：先执行 `uv sync --group eval` 安装离线评测依赖，再用合成评测集运行：
+
+```sh
+# 仅校验证据编号 [rank] 引用边界与预期引用命中率（无需外部模型 Key）
+uv run python scripts/eval_rag.py --citations-only
+
+# 使用真实 Judge/Embedding 模型计算 Faithfulness / ContextRecall / ContextPrecision / AnswerRelevancy
+uv run --group eval python scripts/eval_rag.py --dataset evals/synthetic_rag_eval.jsonl --output evals/latest-report.json
+```
+
 ```sh
 docker build -t law-backend:0.1.0 .
 # API 使用镜像默认命令；Worker 复用同一镜像：
@@ -118,5 +141,7 @@ docker build -t law-backend:0.1.0 .
 - [pgvector Python / SQLAlchemy](https://github.com/pgvector/pgvector-python)
 - [DeepSeek 流式 Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/)
 - [DeepSeek JSON Output](https://api-docs.deepseek.com/guides/json_mode/)
+- [阿里云百炼 DeepSeek](https://help.aliyun.com/zh/model-studio/deepseek-api)
+- [阿里云百炼结构化输出](https://help.aliyun.com/zh/model-studio/json-mode)
 - [阿里云 OpenAI Embedding 兼容接口](https://www.alibabacloud.com/help/zh/model-studio/embedding-interfaces-compatible-with-openai)：v4 支持 1536 维、每批最多 10 条；新工作空间域名可配置，旧北京域名仍受支持。
 - [微信手机号授权](https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/getPhoneNumber)

@@ -108,6 +108,35 @@ async def test_win_rate_full_flow_decoupling_and_invalidation(app, client):
   assert detail["content"]["metric_kind"] == "uncalibrated_rubric"
   assert len(detail["sources"]) == 1
 
+  # Optional precedent reference enrichment attaches cleanly without changing metric_kind
+  import pathlib
+  ref_path = pathlib.Path("/tmp") / f"law_ref_{uuid.uuid4().hex}.jsonl"
+  try:
+    ref_path.write_text(json.dumps({
+      "doc_id": "SYN-1",
+      "cause_code": "private_lending",
+      "claimed_amount_yuan": 100000.0,
+      "outcome_label": "fully_supported",
+      "case_win": True,
+      "win_rate_prediction": {
+        "raw_support_score": 88.0,
+        "elements": _win_rate_payload()["elements"],
+        "defeaters": [],
+      },
+    }, ensure_ascii=False) + "\n", encoding="utf-8")
+    app.state.settings.precedent_reference_path = str(ref_path)
+    queued2 = await client.post(f"/api/v1/cases/{case_id}/analyses", headers=headers,
+      json={"analysis_type": "win_rate", "client_request_id": uuid.uuid4().hex})
+    assert queued2.status_code == 202
+    await run_once(app.state.db, app.state.ai, app.state.storage, app.state.settings)
+    detail2 = (await client.get(f"/api/v1/cases/{case_id}/analyses/{queued2.json()['analysis_id']}", headers=headers)).json()
+    assert detail2["content"]["metric_kind"] == "uncalibrated_rubric"
+    assert detail2["content"]["precedent_reference"]["pool_count"] == 1
+    assert detail2["content"]["precedent_reference"]["outcome_counts"]["fully_supported"] == 1
+  finally:
+    app.state.settings.precedent_reference_path = None
+    ref_path.unlink(missing_ok=True)
+
   # Deleting document atomically invalidates win_rate
   deleted = await client.delete(f"/api/v1/cases/{case_id}/documents/{doc_id}", headers=headers)
   assert deleted.status_code == 204
