@@ -1,4 +1,12 @@
-# 律法AI（AI 英诺律法）
+# 律法AI
+
+[![pytest：集成测试](https://img.shields.io/badge/pytest-%E9%9B%86%E6%88%90%E6%B5%8B%E8%AF%95-53647d)](backend/tests/)
+[![H5：6 张页面截图](https://img.shields.io/badge/H5-6%20%E5%BC%A0%E9%A1%B5%E9%9D%A2%E6%88%AA%E5%9B%BE-2e8b57)](#页面预览)
+[![Python 3.12.14](https://img.shields.io/badge/Python-3.12.14-3776ab?logo=python&logoColor=white)](backend/.python-version)
+[![FastAPI 0.162.5](https://img.shields.io/badge/FastAPI-0.162.5-009688?logo=fastapi&logoColor=white)](backend/pyproject.toml)
+[![Vue 3.5.45](https://img.shields.io/badge/Vue-3.5.45-238b67?logo=vuedotjs&logoColor=white)](frontend/pnpm-lock.yaml)
+[![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169e1?logo=postgresql&logoColor=white)](database/README.md)
+[![GitHub Stars](https://img.shields.io/badge/GitHub-Stars-24292f?logo=github&logoColor=white)](https://github.com/xiaoqi20/legal-ai-assistant/stargazers)
 
 律法AI 是一款面向个人、企业和法律专业用户的案件材料管理与法律咨询辅助工具。你可以在「案件」中管理证据、梳理案情并围绕当前案件提问，也可以在「助手」中向小诺发起独立的法律咨询。项目以微信小程序为首发目标，同时提供移动端 H5 预览。
 
